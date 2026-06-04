@@ -10,6 +10,9 @@ namespace eVote360_Pro.Domain.Entities
         public required int OriginalPartyId { get; set; }
 
         // Navigation property
-        public PoliticalParty OriginalParty { get; set; } = null!;
+        public virtual PoliticalParty OriginalParty { get; set; } = null!;
+        public virtual ICollection<CandidatePostAssignment> PostAssignments { get; set; } =
+            new List<CandidatePostAssignment>();
+        public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
     }
 }

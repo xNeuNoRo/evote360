@@ -10,8 +10,8 @@ namespace eVote360_Pro.Domain.Entities
         public bool IsAlly { get; set; } = false;
 
         // Navigation properties
-        public Candidate Candidate { get; set; } = null!;
-        public ElectivePosition Position { get; set; } = null!;
-        public PoliticalParty Party { get; set; } = null!;
+        public virtual Candidate Candidate { get; set; } = null!;
+        public virtual ElectivePosition Position { get; set; } = null!;
+        public virtual PoliticalParty Party { get; set; } = null!;
     }
 }
