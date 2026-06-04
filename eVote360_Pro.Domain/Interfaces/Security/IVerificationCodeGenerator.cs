@@ -1,5 +1,8 @@
 namespace eVote360_Pro.Domain.Interfaces.Security
 {
+    /// <summary>
+    /// Contrato para la generación de códigos de verificación seguros (OTP).
+    /// </summary>
     public interface IVerificationCodeGenerator
     {
         /// <summary>

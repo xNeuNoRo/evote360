@@ -1,5 +1,8 @@
 namespace eVote360_Pro.Domain.Interfaces.Security
 {
+    /// <summary>
+    /// Contrato para el hashing seguro de credenciales
+    /// </summary>
     public interface IPasswordHasher
     {
         /// <summary>
