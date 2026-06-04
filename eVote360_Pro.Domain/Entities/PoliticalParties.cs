@@ -4,10 +4,10 @@ namespace eVote360_Pro.Domain.Entities
 {
     public class PoliticalParties : ActivatableBaseEntity
     {
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; } = null!;
         public string? Description { get; set; }
-        private string _acronym = null!;
-        public string Acronym
+        private  string _acronym = null!;
+        public required string Acronym
         {
             get => _acronym;
             set => _acronym = value?.ToUpperInvariant()!;

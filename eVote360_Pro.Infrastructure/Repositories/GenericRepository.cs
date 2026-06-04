@@ -4,7 +4,7 @@ using eVote360_Pro.Infrastructure.Contexts;
 using eVote360_Pro.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace eVote360_Pro.Domain.Repositories
+namespace eVote360_Pro.Infrastructure.Repositories
 {
     /// <summary>
     /// Repositorio genérico base para operaciones CRUD estándar a lo largo del proyecto.

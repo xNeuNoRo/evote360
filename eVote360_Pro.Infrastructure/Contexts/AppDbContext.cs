@@ -31,6 +31,10 @@ namespace eVote360_Pro.Infrastructure.Contexts
         // =====================================
         public DbSet<PoliticalParties> PoliticalParties { get; set; }
         public DbSet<ElectivePositions> ElectivePositions { get; set; }
+        public DbSet<Candidates> Candidates { get; set; }
+        public DbSet<PoliticalLeaderAssignments> PoliticalLeaderAssignments { get; set; }
+        public DbSet<PoliticalAlliances> PoliticalAlliances { get; set; }
+        public DbSet<CandidatePostAssignments> CandidatePostAssignments { get; set; }
 
         /// <summary>
         /// Metodo que se ejecuta cada vez que se llama a SaveChangesAsync en el contexto de la base de datos.
