@@ -33,8 +33,6 @@ namespace eVote360_Pro.Domain.Interfaces.Persistence
         /// <summary>
         /// Persiste los cambios realizados en la bd sin necesidad de manejar transacciones explícitas.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
