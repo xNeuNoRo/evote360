@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Common;
 
 namespace eVote360_Pro.Domain.Entities
 {
-    public class CandidatePostAssignments : BaseEntity
+    public class CandidatePostAssignment : BaseEntity
     {
         public int CandidateId { get; set; }
         public int PositionId { get; set; }
@@ -10,8 +10,8 @@ namespace eVote360_Pro.Domain.Entities
         public bool IsAlly { get; set; } = false;
 
         // Navigation properties
-        public Candidates Candidate { get; set; } = null!;
-        public ElectivePositions Position { get; set; } = null!;
-        public PoliticalParties Party { get; set; } = null!;
+        public Candidate Candidate { get; set; } = null!;
+        public ElectivePosition Position { get; set; } = null!;
+        public PoliticalParty Party { get; set; } = null!;
     }
 }

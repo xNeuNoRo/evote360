@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Common;
 
 namespace eVote360_Pro.Domain.Entities
 {
-    public class PoliticalParties : ActivatableBaseEntity
+    public class PoliticalParty : ActivatableBaseEntity
     {
         public required string Name { get; set; } = null!;
         public string? Description { get; set; }
