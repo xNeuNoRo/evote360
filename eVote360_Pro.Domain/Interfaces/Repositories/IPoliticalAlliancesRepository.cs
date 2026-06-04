@@ -4,7 +4,14 @@ namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
     public interface IPoliticalAlliancesRepository : IGenericRepository<PoliticalAlliances>
     {
-        Task<IEnumerable<PoliticalAlliances>> GetActiveAlliancesByPartyAsync(int partyId);
-        Task<bool> AllianceExistsAsync(int partyAId, int partyBId);
+        /// <summary>
+        /// Verifica si existen asignaciones de candidatos aliados activas entre dos partidos.
+        /// </summary>
+        Task<bool> HasActiveAlliedAssignmentsAsync(int partyAId, int partyBId);
+
+        /// <summary>
+        /// Verifica si ya existe una solicitud de alianza o una alianza vigente entre dos partidos.
+        /// </summary>
+        Task<bool> AllianceOrRequestExistsAsync(int partyAId, int partyBId);
     }
 }
