@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Entities;
 
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
-    public interface ICandidatesRepository : IGenericRepository<Candidates>
+    public interface ICandidatesRepository : IGenericRepository<Candidate, int>
     {
         /// <summary>
         /// Verifica si el candidato está participando en una elección con estado 'Activa'.

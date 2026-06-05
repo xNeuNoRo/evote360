@@ -3,12 +3,12 @@ using eVote360_Pro.Domain.Entities;
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
     public interface IPoliticalLeaderAssignmentsRepository
-        : IGenericRepository<PoliticalLeaderAssignments>
+        : IGenericRepository<PoliticalLeaderAssignment, Guid>
     {
         /// <summary>
         /// Verifica si un usuario ya es dirigente de cualquier partido político.
         /// </summary>
-        Task<bool> IsUserAlreadyLeaderAsync(int userId);
+        Task<bool> IsUserAlreadyLeaderAsync(Guid userId);
 
         /// <summary>
         /// Verifica si un partido político ya tiene un dirigente asignado.

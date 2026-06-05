@@ -2,7 +2,7 @@ namespace eVote360_Pro.Domain.Common
 {
     /// <summary>
     /// Clase base para todas las entidades del dominio con soporte para identificadores genéricos.
-    /// Las propiedades de auditoría son gestionadas automáticamente por la infraestructura.
+    /// Contiene las propiedades de auditoría gestionadas automáticamente por la infraestructura.
     /// </summary>
     /// <typeparam name="TId">El tipo de dato del identificador (ej: int, Guid).</typeparam>
     public abstract class BaseEntity<TId>

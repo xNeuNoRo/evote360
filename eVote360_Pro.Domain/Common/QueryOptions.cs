@@ -3,12 +3,11 @@ using System.Linq.Expressions;
 namespace eVote360_Pro.Domain.Common
 {
     /// <summary>
-    /// Encapsula las opciones de consulta para los repositorios,
+    /// Encapsula las opciones de consulta para los repositorios, 
     /// permitiendo un filtrado, ordenamiento e inclusión de datos relacionados más limpio.
     /// </summary>
-    /// <typeparam name="T">La entidad que hereda de BaseEntity</typeparam>
+    /// <typeparam name="T">La entidad sobre la que se realiza la consulta.</typeparam>
     public class QueryOptions<T>
-        where T : BaseEntity
     {
         /// <summary>
         /// Predicado de filtrado (el WHERE).

@@ -7,8 +7,9 @@ namespace eVote360_Pro.Domain.Interfaces.Repositories
     /// Repositorio generico base para operaciones CRUD estandar a lo largo del project
     /// </summary>
     /// <typeparam name="T">La entidad que hereda de BaseEntity</typeparam>
-    public interface IGenericRepository<T>
-        where T : BaseEntity
+    /// <typeparam name="TId">El tipo de dato del identificador de la entidad</typeparam>
+    public interface IGenericRepository<T, TId>
+        where T : BaseEntity<TId>
     {
         /// <summary>
         /// Obtiene todos los registros según las opciones de consulta proporcionadas.
@@ -23,7 +24,7 @@ namespace eVote360_Pro.Domain.Interfaces.Repositories
         /// <summary>
         /// Obtiene un registro por su ID con soporte opcional para inclusión de propiedades de navegación.
         /// </summary>
-        Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
+        Task<T?> GetByIdAsync(TId id, params Expression<Func<T, object>>[] includes);
 
         /// <summary>
         /// Agrega un nuevo registro.

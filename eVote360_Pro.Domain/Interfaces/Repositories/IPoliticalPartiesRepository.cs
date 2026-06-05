@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Entities;
 
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
-    public interface IPoliticalPartiesRepository : IGenericRepository<PoliticalParties>
+    public interface IPoliticalPartiesRepository : IGenericRepository<PoliticalParty, int>
     {
         /// <summary>
         /// Verifica si el partido tiene candidatos activos registrados.

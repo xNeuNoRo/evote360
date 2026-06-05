@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Entities;
 
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
-    public interface IPoliticalAlliancesRepository : IGenericRepository<PoliticalAlliances>
+    public interface IPoliticalAlliancesRepository : IGenericRepository<PoliticalAlliance, int>
     {
         /// <summary>
         /// Verifica si existen asignaciones de candidatos aliados activas entre dos partidos.

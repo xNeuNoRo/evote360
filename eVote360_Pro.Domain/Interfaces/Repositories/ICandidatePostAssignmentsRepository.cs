@@ -3,7 +3,7 @@ using eVote360_Pro.Domain.Entities;
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
     public interface ICandidatePostAssignmentsRepository
-        : IGenericRepository<CandidatePostAssignments>
+        : IGenericRepository<CandidatePostAssignment, int>
     {
         /// <summary>
         /// Verifica si un candidato ya tiene una asignación a cualquier puesto dentro de un partido específico.

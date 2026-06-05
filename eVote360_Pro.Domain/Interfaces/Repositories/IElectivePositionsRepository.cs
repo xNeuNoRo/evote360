@@ -2,7 +2,7 @@ using eVote360_Pro.Domain.Entities;
 
 namespace eVote360_Pro.Domain.Interfaces.Repositories
 {
-    public interface IElectivePositionsRepository : IGenericRepository<ElectivePositions>
+    public interface IElectivePositionsRepository : IGenericRepository<ElectivePosition, int>
     {
         /// <summary>
         /// Verifica si el puesto tiene candidatos activos asignados actualmente.
