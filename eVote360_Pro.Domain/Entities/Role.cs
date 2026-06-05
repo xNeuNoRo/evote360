@@ -24,10 +24,7 @@ namespace eVote360_Pro.Domain.Entities
             if (string.IsNullOrWhiteSpace(name))
                 throw new DomainException("El nombre del rol es requerido.", "Role.NameRequired");
 
-            return new Role
-            {
-                Name = name.Trim()
-            };
+            return new Role { Name = name.Trim() };
         }
 
         /// <summary>
