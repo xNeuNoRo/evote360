@@ -12,6 +12,7 @@ namespace eVote360_Pro.Domain.Entities
         public string Name { get; private set; } = null!;
         public DateTime RealizationDate { get; private set; }
         public ElectionStatus Status { get; private set; }
+        public int Year => RealizationDate.Year;
 
         // Navigation Properties
         public virtual ICollection<Vote> Votes { get; private set; } = new List<Vote>();

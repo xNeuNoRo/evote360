@@ -6,7 +6,6 @@ namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
     /// Representa un usuario administrativo o político con acceso al sistema.
-    /// Encapsula la lógica de seguridad, roles y restricciones de desactivación.
     /// </summary>
     public class User : ActivatableBaseEntity<Guid>
     {
@@ -21,11 +20,11 @@ namespace eVote360_Pro.Domain.Entities
         public virtual Role? Role { get; private set; }
         public virtual PoliticalLeaderAssignment? LeaderAssignment { get; private set; }
 
-        // Constructor privado para EF Core y Factory Method
+        // Constructor privado para EF Core
         private User() { }
 
         /// <summary>
-        /// Crea un nuevo usuario con validaciones básicas de identidad y formato.
+        /// Crea un nuevo usuario con validaciones básicas.
         /// </summary>
         public static User Create(
             string firstName,
@@ -85,13 +84,13 @@ namespace eVote360_Pro.Domain.Entities
 
             if (hasAssignedParty)
                 throw new DomainException(
-                    "No se puede cambiar el rol porque tiene un partido político asignado como dirigente.",
+                    "No se puede cambiar el rol porque tiene un partido político asignado.",
                     "User.RoleChangeBlockedByParty"
                 );
 
             if (isLastAdmin)
                 throw new DomainException(
-                    "No se puede modificar este usuario porque es el único administrador activo del sistema.",
+                    "No se puede modificar al único administrador activo.",
                     "User.LastAdminRoleChangeBlocked"
                 );
 
@@ -119,26 +118,20 @@ namespace eVote360_Pro.Domain.Entities
         {
             if (isSelf)
                 throw new DomainException(
-                    "No puede desactivar su propio usuario mientras está autenticado.",
+                    "No puede desactivarse a sí mismo.",
                     "User.SelfDeactivationBlocked"
                 );
 
             if (isLastAdmin)
                 throw new DomainException(
-                    "No se puede desactivar este usuario porque es el único administrador activo del sistema.",
+                    "No se puede desactivar al único administrador activo.",
                     "User.LastAdminDeactivationBlocked"
                 );
 
             IsActive = false;
         }
 
-        /// <summary>
-        /// Activa el usuario.
-        /// </summary>
-        public void Activate()
-        {
-            IsActive = true;
-        }
+        public void Activate() => IsActive = true;
 
         private static void ValidateBasicInfo(
             string firstName,
@@ -160,10 +153,7 @@ namespace eVote360_Pro.Domain.Entities
                 );
 
             if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                throw new DomainException(
-                    "El correo electrónico debe tener un formato válido.",
-                    "User.InvalidEmailFormat"
-                );
+                throw new DomainException("Formato de correo inválido.", "User.InvalidEmailFormat");
 
             if (string.IsNullOrWhiteSpace(username))
                 throw new DomainException(

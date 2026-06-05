@@ -1,12 +1,12 @@
 using System.Text.RegularExpressions;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Exceptions;
+using eVote360_Pro.Domain.ValueObjects;
 
 namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
     /// Representa a un ciudadano habilitado para participar en los procesos electorales.
-    /// Encapsula las reglas de inmutabilidad del documento de identidad y validaciones de formato.
     /// </summary>
     public class Citizen : ActivatableBaseEntity
     {
@@ -25,20 +25,20 @@ namespace eVote360_Pro.Domain.Entities
         private Citizen() { }
 
         /// <summary>
-        /// Crea una nueva instancia de un ciudadano con validaciones básicas de formato.
+        /// Crea una nueva instancia de un ciudadano validando el documento de identidad mediante un Value Object.
         /// </summary>
         public static Citizen Create(
-            string identityDocument,
+            IdentityDocument identityDocument,
             string firstName,
             string lastName,
             string email
         )
         {
-            ValidateBasicInfo(identityDocument, firstName, lastName, email);
+            ValidateBasicInfo(firstName, lastName, email);
 
             return new Citizen
             {
-                IdentityDocument = identityDocument.Trim(),
+                IdentityDocument = identityDocument.Value,
                 FirstName = firstName.Trim(),
                 LastName = lastName.Trim(),
                 Email = email.Trim().ToLowerInvariant(),
@@ -50,66 +50,42 @@ namespace eVote360_Pro.Domain.Entities
         /// Actualiza la información del ciudadano respetando la inmutabilidad del documento de identidad.
         /// </summary>
         public void UpdateInformation(
-            string identityDocument,
+            IdentityDocument identityDocument,
             string firstName,
             string lastName,
             string email,
             bool hasParticipated
         )
         {
-            ValidateBasicInfo(identityDocument, firstName, lastName, email);
+            ValidateBasicInfo(firstName, lastName, email);
 
             if (
                 hasParticipated
                 && !string.Equals(
                     IdentityDocument,
-                    identityDocument.Trim(),
+                    identityDocument.Value,
                     StringComparison.OrdinalIgnoreCase
                 )
             )
             {
-                // Si ya participó, el documento de identidad es inmutable.
                 throw new DomainException(
                     "No se puede modificar el número de documento de identidad de este ciudadano porque ya participó en una elección.",
                     "Citizen.IdentityDocumentImmutable"
                 );
             }
 
-            IdentityDocument = identityDocument.Trim();
+            IdentityDocument = identityDocument.Value;
             FirstName = firstName.Trim();
             LastName = lastName.Trim();
             Email = email.Trim().ToLowerInvariant();
         }
 
-        /// <summary>
-        /// Desactiva al ciudadano, impidiendo su participación en futuras votaciones.
-        /// </summary>
-        public void Deactivate()
-        {
-            IsActive = false;
-        }
+        public void Deactivate() => IsActive = false;
 
-        /// <summary>
-        /// Activa al ciudadano.
-        /// </summary>
-        public void Activate()
-        {
-            IsActive = true;
-        }
+        public void Activate() => IsActive = true;
 
-        private static void ValidateBasicInfo(
-            string identityDocument,
-            string firstName,
-            string lastName,
-            string email
-        )
+        private static void ValidateBasicInfo(string firstName, string lastName, string email)
         {
-            if (string.IsNullOrWhiteSpace(identityDocument))
-                throw new DomainException(
-                    "El documento de identidad es requerido.",
-                    "Citizen.IdentityDocumentRequired"
-                );
-
             if (string.IsNullOrWhiteSpace(firstName))
                 throw new DomainException("El nombre es requerido.", "Citizen.FirstNameRequired");
 
