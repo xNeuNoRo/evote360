@@ -8,12 +8,12 @@ namespace eVote360_Pro.Domain.Interfaces.Repositories
     public interface IRoleRepository : IGenericRepository<Role, int>
     {
         /// <summary>
-        /// Obtiene un rol por su nombre exacto.
+        /// Obtiene un rol por su nombre exacto. 
         /// </summary>
         Task<Role?> GetByNameAsync(string roleName);
 
         /// <summary>
-        /// Verifica si un nombre de rol ya existe para evitar duplicados en procesos administrativos.
+        /// Verifica si ya existe un rol con el mismo nombre.
         /// </summary>
         Task<bool> ExistsByNameAsync(string roleName, int? excludeId = null);
     }
