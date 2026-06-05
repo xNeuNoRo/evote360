@@ -82,6 +82,12 @@ namespace eVote360_Pro.Domain.Entities
             IEnumerable<string>? partiesWithMissingCandidates = null
         )
         {
+            if (!IsActive)
+                throw new DomainException(
+                    "No se puede activar una elección que se encuentra desactivada o eliminada.",
+                    "Election.InactiveCannotBeActivated"
+                );
+
             if (Status != ElectionStatus.Pending)
                 throw new DomainException(
                     "Solo se pueden activar elecciones en estado pendiente.",
@@ -150,7 +156,7 @@ namespace eVote360_Pro.Domain.Entities
         /// <summary>
         /// Activa nuevamente una elección previamente desactivada.
         /// </summary>
-        public void ReActivate()
+        public void Reactivate()
         {
             IsActive = true;
         }
