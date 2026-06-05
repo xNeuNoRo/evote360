@@ -5,12 +5,11 @@ namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
     /// Registra la participación de un ciudadano en una elección específica.
-    /// Es el mecanismo principal para garantizar la regla de un solo voto por elector.
     /// </summary>
     public class VoterParticipation : BaseEntity
     {
         public int CitizenId { get; private set; }
-        public int ElectionId { get; private set; }
+        public Guid ElectionId { get; private set; }
 
         // Navigation properties
         public virtual Citizen Citizen { get; private set; } = null!;
@@ -24,7 +23,7 @@ namespace eVote360_Pro.Domain.Entities
         /// </summary>
         public static VoterParticipation Create(
             int citizenId,
-            int electionId,
+            Guid electionId,
             bool isCitizenActive,
             bool isElectionActive
         )
@@ -35,7 +34,7 @@ namespace eVote360_Pro.Domain.Entities
                     "Participation.CitizenRequired"
                 );
 
-            if (electionId <= 0)
+            if (electionId == Guid.Empty)
                 throw new DomainException(
                     "La elección es requerida.",
                     "Participation.ElectionRequired"

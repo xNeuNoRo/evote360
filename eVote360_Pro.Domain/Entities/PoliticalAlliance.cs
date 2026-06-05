@@ -23,7 +23,7 @@ namespace eVote360_Pro.Domain.Entities
         private PoliticalAlliance() { }
 
         /// <summary>
-        /// Crea una nueva solicitud de alianza con validaciones básicas.
+        /// Crea una nueva solicitud de alianza con validaciones de negocio.
         /// </summary>
         public static PoliticalAlliance Create(
             int requesterPartyId,
@@ -60,7 +60,7 @@ namespace eVote360_Pro.Domain.Entities
         /// <summary>
         /// Acepta la solicitud de alianza política.
         /// </summary>
-        public void Accept(bool isRequesterActive, bool isReceiverActive)
+        public void Accept(bool isRequesterActive, bool isReceiverActive, DateTime currentTime)
         {
             if (Status != AllianceStatus.Pending)
                 throw new DomainException(
@@ -75,7 +75,7 @@ namespace eVote360_Pro.Domain.Entities
                 );
 
             Status = AllianceStatus.Accepted;
-            AcceptedAt = DateTime.UtcNow;
+            AcceptedAt = currentTime;
         }
 
         /// <summary>

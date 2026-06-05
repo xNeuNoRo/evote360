@@ -24,7 +24,7 @@ namespace eVote360_Pro.Domain.Entities
         private Candidate() { }
 
         /// <summary>
-        /// Crea una nueva instancia de un candidato.
+        /// Crea una nueva instancia de un candidato con las validaciones iniciales.
         /// </summary>
         public static Candidate Create(
             string firstName,
@@ -68,12 +68,8 @@ namespace eVote360_Pro.Domain.Entities
         }
 
         /// <summary>
-        /// Actualiza la información del candidato.
+        /// Actualiza la información del candidato respetando las reglas de inmutabilidad histórica.
         /// </summary>
-        /// <param name="firstName">Nuevo nombre.</param>
-        /// <param name="lastName">Nuevo apellido.</param>
-        /// <param name="photoPath">Nueva ruta de foto (opcional).</param>
-        /// <param name="hasParticipated">Indica si el candidato ya participó en una elección activa o finalizada.</param>
         public void UpdateInformation(
             string firstName,
             string lastName,
@@ -113,7 +109,6 @@ namespace eVote360_Pro.Domain.Entities
         /// <summary>
         /// Desactiva al candidato validando que no tenga asignaciones vigentes.
         /// </summary>
-        /// <param name="hasActiveAssignment">Indica si el candidato tiene una asignación a un puesto electivo vigente.</param>
         public void Deactivate(bool hasActiveAssignment)
         {
             if (hasActiveAssignment)

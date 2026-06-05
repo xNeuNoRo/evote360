@@ -4,13 +4,12 @@ using eVote360_Pro.Domain.Exceptions;
 namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
-    /// Representa un código de verificación (OTP) enviado por correo electrónico.
-    /// Encapsula las reglas de expiración y uso único.
+    /// Representa un código de verificación (OTP) con ID seguro y lógica de tiempo externa.
     /// </summary>
-    public class VerificationCode : BaseEntity
+    public class VerificationCode : BaseEntity<Guid>
     {
         public int CitizenId { get; private set; }
-        public int ElectionId { get; private set; }
+        public Guid ElectionId { get; private set; }
         public string Code { get; private set; } = null!;
         public DateTime ExpirationDate { get; private set; }
         public bool IsUsed { get; private set; }
@@ -23,12 +22,13 @@ namespace eVote360_Pro.Domain.Entities
         private VerificationCode() { }
 
         /// <summary>
-        /// Crea un nuevo código de verificación con un tiempo de expiración estándar.
+        /// Crea un nuevo código de verificación.
         /// </summary>
         public static VerificationCode Create(
             int citizenId,
-            int electionId,
+            Guid electionId,
             string code,
+            DateTime currentTime,
             int expiryMinutes = 5
         )
         {
@@ -38,7 +38,7 @@ namespace eVote360_Pro.Domain.Entities
                     "VerificationCode.CitizenRequired"
                 );
 
-            if (electionId <= 0)
+            if (electionId == Guid.Empty)
                 throw new DomainException(
                     "La elección es requerida.",
                     "VerificationCode.ElectionRequired"
@@ -46,43 +46,36 @@ namespace eVote360_Pro.Domain.Entities
 
             if (string.IsNullOrWhiteSpace(code))
                 throw new DomainException(
-                    "El código no puede estar vacío.",
+                    "El código es requerido.",
                     "VerificationCode.CodeRequired"
                 );
 
             return new VerificationCode
             {
+                Id = Guid.NewGuid(),
                 CitizenId = citizenId,
                 ElectionId = electionId,
                 Code = code,
-                ExpirationDate = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                ExpirationDate = currentTime.AddMinutes(expiryMinutes),
                 IsUsed = false,
             };
         }
 
         /// <summary>
-        /// Marca el código como utilizado tras validar que no haya expirado ni haya sido usado previamente.
+        /// Marca el código como utilizado tras validar la expiración con el tiempo actual.
         /// </summary>
-        public void Use()
+        public void Use(DateTime currentTime)
         {
             if (IsUsed)
                 throw new DomainException(
-                    "Este código de verificación ya fue utilizado.",
+                    "Este código ya fue utilizado.",
                     "VerificationCode.AlreadyUsed"
                 );
 
-            if (IsExpired)
-                throw new DomainException(
-                    "Este código de verificación ha expirado.",
-                    "VerificationCode.Expired"
-                );
+            if (currentTime > ExpirationDate)
+                throw new DomainException("Este código ha expirado.", "VerificationCode.Expired");
 
             IsUsed = true;
         }
-
-        /// <summary>
-        /// Indica si el código ha sobrepasado su fecha de expiración.
-        /// </summary>
-        public bool IsExpired => DateTime.UtcNow > ExpirationDate;
     }
 }

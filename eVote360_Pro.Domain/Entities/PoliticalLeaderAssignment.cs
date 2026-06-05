@@ -4,15 +4,13 @@ using eVote360_Pro.Domain.Exceptions;
 namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
-    /// Representa la vinculación 1:1 entre un usuario con rol Dirigente y un partido político.
-    /// Encapsula las reglas de validación de roles y estados de activación.
+    /// Vinculación 1:1 entre Usuario y Partido.
     /// </summary>
-    public class PoliticalLeaderAssignment : ActivatableBaseEntity
+    public class PoliticalLeaderAssignment : ActivatableBaseEntity<Guid>
     {
-        public int UserId { get; private set; }
         public int PartyId { get; private set; }
 
-        // Navigation properties
+        // Navigation property
         public virtual PoliticalParty Party { get; private set; } = null!;
         public virtual User User { get; private set; } = null!;
 
@@ -23,14 +21,14 @@ namespace eVote360_Pro.Domain.Entities
         /// Crea una nueva asignación de dirigente con validaciones de rol y estado.
         /// </summary>
         public static PoliticalLeaderAssignment Create(
-            int userId,
+            Guid userId,
             int partyId,
             bool isUserActive,
             bool isUserDirigente,
             bool isPartyActive
         )
         {
-            if (userId <= 0)
+            if (userId == Guid.Empty)
                 throw new DomainException("El usuario es requerido.", "Assignment.InvalidUser");
 
             if (partyId <= 0)
@@ -59,7 +57,7 @@ namespace eVote360_Pro.Domain.Entities
 
             return new PoliticalLeaderAssignment
             {
-                UserId = userId,
+                Id = userId, // PK es el FK hacia User
                 PartyId = partyId,
                 IsActive = true,
             };

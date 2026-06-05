@@ -4,22 +4,13 @@ using eVote360_Pro.Domain.Exceptions;
 namespace eVote360_Pro.Domain.Entities
 {
     /// <summary>
-    /// Representa un voto individual emitido en una elección.
-    /// Esta entidad es estrictamente anónima y no contiene referencias al ciudadano.
+    /// Representa un voto individual. Utiliza Guid para garantizar el anonimato y evitar correlación temporal.
     /// </summary>
-    public class Vote : BaseEntity
+    public class Vote : BaseEntity<Guid>
     {
-        public int ElectionId { get; private set; }
+        public Guid ElectionId { get; private set; }
         public int PositionId { get; private set; }
-
-        /// <summary>
-        /// ID del candidato seleccionado. Nulo si es la opción "Ninguno".
-        /// </summary>
         public int? CandidateId { get; private set; }
-
-        /// <summary>
-        /// ID del partido por el cual se emitió el voto. Nulo si es la opción "Ninguno".
-        /// </summary>
         public int? PartyId { get; private set; }
 
         // Navigation Properties
@@ -32,17 +23,16 @@ namespace eVote360_Pro.Domain.Entities
         private Vote() { }
 
         /// <summary>
-        /// Crea un nuevo voto validando la integridad de la selección.
-        /// Soporta tanto votos a candidatos/partidos como la opción "Ninguno".
+        /// Crea un nuevo voto con un ID aleatorio y validaciones de integridad.
         /// </summary>
         public static Vote Create(
-            int electionId,
+            Guid electionId,
             int positionId,
             int? candidateId = null,
             int? partyId = null
         )
         {
-            if (electionId <= 0)
+            if (electionId == Guid.Empty)
                 throw new DomainException("La elección es requerida.", "Vote.ElectionRequired");
 
             if (positionId <= 0)
@@ -53,23 +43,20 @@ namespace eVote360_Pro.Domain.Entities
 
             // Lógica para opción "Ninguno" vs Voto a Candidato
             if (candidateId.HasValue && !partyId.HasValue)
-            {
                 throw new DomainException(
                     "Un voto a un candidato debe estar asociado a un partido político.",
                     "Vote.PartyRequiredForCandidate"
                 );
-            }
 
             if (!candidateId.HasValue && partyId.HasValue)
-            {
                 throw new DomainException(
                     "No se puede emitir un voto a un partido sin un candidato seleccionado.",
                     "Vote.CandidateRequiredForParty"
                 );
-            }
 
             return new Vote
             {
+                Id = Guid.NewGuid(),
                 ElectionId = electionId,
                 PositionId = positionId,
                 CandidateId = candidateId,

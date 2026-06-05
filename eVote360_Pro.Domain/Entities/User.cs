@@ -8,7 +8,7 @@ namespace eVote360_Pro.Domain.Entities
     /// Representa un usuario administrativo o político con acceso al sistema.
     /// Encapsula la lógica de seguridad, roles y restricciones de desactivación.
     /// </summary>
-    public class User : ActivatableBaseEntity
+    public class User : ActivatableBaseEntity<Guid>
     {
         public string FirstName { get; private set; } = null!;
         public string LastName { get; private set; } = null!;
@@ -46,6 +46,7 @@ namespace eVote360_Pro.Domain.Entities
 
             return new User
             {
+                Id = Guid.NewGuid(),
                 FirstName = firstName.Trim(),
                 LastName = lastName.Trim(),
                 Email = email.Trim().ToLowerInvariant(),
