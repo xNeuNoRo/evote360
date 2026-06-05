@@ -13,5 +13,10 @@ namespace eVote360_Pro.Domain.Interfaces.Repositories
         /// Verifica si el candidato ha participado en alguna elección previa o activa.
         /// </summary>
         Task<bool> HasParticipatedInAnyElectionAsync(int candidateId);
+
+        /// <summary>
+        /// Verifica si el candidato tiene alguna asignación a un puesto electivo (propia o aliada).
+        /// </summary>
+        Task<bool> IsAssignedToAnyPostAsync(int candidateId);
     }
 }
