@@ -1,3 +1,4 @@
+using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -31,6 +32,26 @@ namespace eVote360_Pro.Infrastructure.Persistence.Configurations
                 .WithOne(u => u.Role)
                 .HasForeignKey(x => x.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            #endregion
+
+            #region Seed Data
+
+            // Seedeamos los roles necesarios para el sistema funcionar correctamente
+            builder.HasData(
+                new
+                {
+                    Id = 1,
+                    Name = SystemRoles.Administrator,
+                    CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+                },
+                new
+                {
+                    Id = 2,
+                    Name = SystemRoles.PoliticalLeader,
+                    CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+                }
+            );
 
             #endregion
         }
