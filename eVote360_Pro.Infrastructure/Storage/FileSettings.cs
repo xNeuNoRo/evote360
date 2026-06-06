@@ -21,5 +21,15 @@ namespace eVote360_Pro.Infrastructure.Storage
         /// Tamaño máximo permitido en bytes (por defecto 15MB).
         /// </summary>
         public long MaxSizeInBytes { get; init; } = 15 * 1024 * 1024;
+
+        /// <summary>
+        /// Extensiones de archivo permitidas (ej: [".jpg", ".png"]).
+        /// </summary>
+        public string[] AllowedExtensions { get; init; } = { ".jpg", ".jpeg", ".png" };
+
+        /// <summary>
+        /// Tipos MIME permitidos (ej: ["image/jpeg", "image/png"]).
+        /// </summary>
+        public string[] AllowedMimeTypes { get; init; } = { "image/jpeg", "image/png" };
     }
 }

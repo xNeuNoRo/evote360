@@ -13,8 +13,6 @@ namespace eVote360_Pro.Infrastructure.Storage
     {
         private readonly FileSettings _settings;
         private readonly ILogger<FileService> _logger;
-        private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png" };
-        private readonly string[] _allowedMimeTypes = { "image/jpeg", "image/png" };
 
         public FileService(IOptions<FileSettings> options, ILogger<FileService> logger)
         {
@@ -120,12 +118,19 @@ namespace eVote360_Pro.Infrastructure.Storage
 
             // Validamos la extensión del archivo
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!_allowedExtensions.Contains(extension))
+            if (!_settings.AllowedExtensions.Contains(extension))
+            {
+                _logger.LogWarning("Extensión de archivo no permitida: {Extension}", extension);
                 return false;
+            }
 
             // Validamos el tipo MIMETYPE del archivo
-            if (!_allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()))
+            string mimeType = file.ContentType.ToLowerInvariant();
+            if (!_settings.AllowedMimeTypes.Contains(mimeType))
+            {
+                _logger.LogWarning("MIMETYPE no permitido: {MimeType}", mimeType);
                 return false;
+            }
 
             return true;
         }
@@ -137,10 +142,7 @@ namespace eVote360_Pro.Infrastructure.Storage
                 if (string.IsNullOrWhiteSpace(filePath))
                     return;
 
-                // Construimos la ruta absoluta desde la relativa de la DB
-                // Ej: /uploads/candidates/abc.jpg -> C:/App/folder/uploads/candidates/abc.jpg
-                string relativePath = filePath.TrimStart('/');
-                string absolutePath = Path.Combine(_settings.BasePath, relativePath);
+                string absolutePath = GetAbsolutePath(filePath);
 
                 if (File.Exists(absolutePath))
                 {
@@ -150,11 +152,7 @@ namespace eVote360_Pro.Infrastructure.Storage
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(
-                    ex,
-                    "No se pudo eliminar el archivo físico: {Path}. Es posible que esté en uso.",
-                    filePath
-                );
+                _logger.LogWarning(ex, "No se pudo eliminar el archivo físico: {Path}.", filePath);
             }
         }
     }
