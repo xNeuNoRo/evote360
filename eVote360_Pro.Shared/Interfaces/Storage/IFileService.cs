@@ -9,6 +9,13 @@ namespace eVote360_Pro.Shared.Interfaces.Storage
     public interface IFileService
     {
         /// <summary>
+        /// Convierte una ruta relativa almacenada en la DB a una ruta física absoluta en el servidor.
+        /// </summary>
+        /// <param name="relativePath">Ruta relativa (ej: "/uploads/candidates/abc.jpg").</param>
+        /// <returns>Ruta absoluta en el servidor (ej: "C:/App/folder/uploads/candidates/abc.jpg").</returns>
+        string GetAbsolutePath(string relativePath);
+
+        /// <summary>
         /// Guarda un archivo de forma permanente en el servidor con un nombre único.
         /// </summary>
         /// <param name="file">El archivo recibido desde la WebApp.</param>
