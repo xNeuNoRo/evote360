@@ -28,11 +28,13 @@ namespace eVote360_Pro.Infrastructure.Repositories
             string code
         )
         {
+            var now = _dateTimeProvider.UtcNow;
             return await _dbSet.FirstOrDefaultAsync(v =>
                 v.CitizenId == citizenId
                 && v.ElectionId == electionId
                 && v.Code == code
                 && !v.IsUsed
+                && v.ExpirationDate > now
             );
         }
 
