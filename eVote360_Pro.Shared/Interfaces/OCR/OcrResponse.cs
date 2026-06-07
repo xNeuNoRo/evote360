@@ -4,7 +4,7 @@ namespace eVote360_Pro.Shared.Interfaces.OCR
     /// Encapsula el resultado del procesamiento de una imagen de identificación.
     /// Proporciona datos sobre la extracción, validación y confianza del motor OCR/IA.
     /// </summary>
-    public class OCRResponse
+    public class OcrResponse
     {
         /// <summary>
         /// Indica si el proceso se completó exitosamente.
