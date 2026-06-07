@@ -35,8 +35,11 @@ namespace eVote360_Pro.Infrastructure.OCR
                 // Subimos la imagen a una ruta temporal para procesamiento
                 tempPath = await _fileService.UploadTempFileAsync(idCardImage);
 
+                // Obtenemos la ruta absoluta del archivo temporal
+                string tempAbsPath = _fileService.GetAbsolutePath(tempPath);
+
                 // Validamos que la imagen contenga un documento con forma válida antes de intentar OCR
-                using (var src = new Mat(tempPath))
+                using (var src = new Mat(tempAbsPath))
                 {
                     // Detectamos si la imagen tiene un documento con forma válida (cuadrilátero dominante)
                     response.IsDocumentValid = VisionProcessor.ContainsDocument(src);
@@ -50,14 +53,18 @@ namespace eVote360_Pro.Infrastructure.OCR
                     using (var optimized = VisionProcessor.PrepareForTextExtraction(src))
                     {
                         optimizedPath = tempPath + "_opt.png";
-                        optimized.SaveImage(optimizedPath);
+                        string optAbsPath = _fileService.GetAbsolutePath(optimizedPath);
+                        optimized.SaveImage(optAbsPath);
                     }
                 }
+
+                // Obtenemos la ruta absoluta del archivo optimizado para el OCR
+                string finalAbsPath = _fileService.GetAbsolutePath(optimizedPath);
 
                 // Ejecutamos el OCR utilizando Tesseract en la imagen optimizada
                 using (var engine = new TesseractEngine(_tessdataPath, "spa", EngineMode.Default))
                 // Cargamos la imagen optimizada y procesamos el texto
-                using (var img = Pix.LoadFromFile(optimizedPath))
+                using (var img = Pix.LoadFromFile(finalAbsPath))
                 // Obtenemos el resultado del OCR y extraemos el numero de identidad utilizando un patrón regex específico
                 using (var page = engine.Process(img))
                 {

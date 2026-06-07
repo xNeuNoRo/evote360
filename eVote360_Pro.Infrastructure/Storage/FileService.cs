@@ -25,27 +25,61 @@ namespace eVote360_Pro.Infrastructure.Storage
             if (string.IsNullOrWhiteSpace(relativePath))
                 return string.Empty;
 
-            // Quitamos el slash inicial para que Path.Combine funcione correctamente
-            string cleanRelativePath = relativePath.TrimStart('/');
-            // Si la ruta ya incluye el prefijo de uploads, debemos mapearla correctamente al BasePath
-            return Path.Combine(_settings.BasePath, cleanRelativePath);
+            // Limpiamos y normalizamos la ruta relativa
+            string cleanRelativePath = relativePath.TrimStart('/', '\\');
+
+            // Obtenemos la ruta absoluta base
+            string baseAbsolutePath = Path.GetFullPath(_settings.BasePath);
+
+            // Combinamos y resolvemos la ruta completa
+            string combinedPath = Path.GetFullPath(
+                Path.Combine(baseAbsolutePath, cleanRelativePath)
+            );
+
+            // La ruta final DEBE empezar por la ruta base configurada para evitar Path Traversal
+            if (!combinedPath.StartsWith(baseAbsolutePath, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogCritical(
+                    "Intento de acceso ilegal fuera del directorio base (Path Traversal): {Path}",
+                    combinedPath
+                );
+                return string.Empty;
+            }
+
+            return combinedPath;
         }
 
         public async Task<string> UploadFileAsync(IFormFile file, string folderName)
         {
             try
             {
-                // Generamos un nombre único y sanitizar carpeta
+                // Sanitizamos el nombre de la carpeta para evitar
+                // caracteres inválidos o intentos de path traversal
+                string sanitizedFolder = string.Join(
+                        "_",
+                        folderName.Split(Path.GetInvalidFileNameChars())
+                    )
+                    .Replace("..", "")
+                    .Trim('/', '\\');
+
                 string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                string subFolder = folderName.Trim('/', '\\');
 
                 // Construimos rutas (Absoluta para Guardar, Relativa para la DB)
-                string absoluteFolderPath = Path.Combine(
-                    _settings.BasePath,
-                    _settings.UrlPrefix.TrimStart('/'),
-                    subFolder
+                string uploadRoot = Path.Combine(
+                    _settings.UrlPrefix.TrimStart('/', '\\'),
+                    sanitizedFolder
                 );
-                string relativePath = $"/{_settings.UrlPrefix.Trim('/')}/{subFolder}/{fileName}";
+                string absoluteFolderPath = GetAbsolutePath(uploadRoot);
+
+                if (string.IsNullOrEmpty(absoluteFolderPath))
+                {
+                    throw new InvalidOperationException(
+                        "La ruta de carga no es válida o es insegura."
+                    );
+                }
+
+                string relativePath =
+                    $"/{_settings.UrlPrefix.Trim('/')}/{sanitizedFolder}/{fileName}";
 
                 // Aseguramos que el directorio existe
                 if (!Directory.Exists(absoluteFolderPath))
@@ -76,10 +110,15 @@ namespace eVote360_Pro.Infrastructure.Storage
             {
                 // Generamos un nombre único para el archivo temporal
                 string fileName = $"temp_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                // Construimos la ruta absoluta para el archivo temporal
-                string absoluteTempPath = Path.Combine(_settings.BasePath, "temp");
 
-                // Aseguramos que el directorio temporal existe
+                // Usamos GetAbsolutePath para asegurar que la carpeta 'temp' sea segura
+                string absoluteTempPath = GetAbsolutePath("temp");
+
+                if (string.IsNullOrEmpty(absoluteTempPath))
+                {
+                    throw new InvalidOperationException("El directorio temporal no es seguro.");
+                }
+
                 if (!Directory.Exists(absoluteTempPath))
                 {
                     Directory.CreateDirectory(absoluteTempPath);
@@ -92,7 +131,8 @@ namespace eVote360_Pro.Infrastructure.Storage
                     await file.CopyToAsync(stream);
                 }
 
-                return fullPath;
+                // Retornamos la ruta relativa para su uso posterior
+                return "temp/" + fileName;
             }
             catch (Exception ex)
             {

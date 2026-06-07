@@ -56,12 +56,15 @@ namespace eVote360_Pro.Infrastructure.Messaging
                 using var scope = _scopeFactory.CreateScope();
                 var emailFactory = scope.ServiceProvider.GetRequiredService<IFluentEmailFactory>();
 
+                // Sanitizamos el nombre de la plantilla para evitar problemas de path traversal
+                string sanitizedTemplateName = Path.GetFileNameWithoutExtension(templateName);
+
                 // Construimos la ruta de la plantilla
                 string templatePath = Path.Combine(
                     AppContext.BaseDirectory,
                     "Templates",
                     "Emails",
-                    $"{templateName}.cshtml"
+                    $"{sanitizedTemplateName}.cshtml"
                 );
 
                 if (!File.Exists(templatePath))
