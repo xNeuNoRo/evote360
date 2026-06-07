@@ -2,6 +2,7 @@ using eVote360_Pro.Domain.Entities;
 using eVote360_Pro.Domain.Interfaces.Security;
 using eVote360_Pro.Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace eVote360_Pro.Infrastructure.Persistence
 {
@@ -15,7 +16,8 @@ namespace eVote360_Pro.Infrastructure.Persistence
         /// </summary>
         public static async Task SeedAdminUserAsync(
             AppDbContext context,
-            IPasswordHasher passwordHasher
+            IPasswordHasher passwordHasher,
+            IConfiguration configuration
         )
         {
             // Solo actuamos si no existen usuarios en el sistema
@@ -29,7 +31,7 @@ namespace eVote360_Pro.Infrastructure.Persistence
                 return;
 
             // Generamos el hash para la contraseña por defecto
-            string defaultPassword = "Admin123";
+            string defaultPassword = configuration["SeedData:AdminPassword"] ?? "Admin123!";
             string passwordHash = passwordHasher.Hash(defaultPassword);
 
             // Creamos el usuario inicial
