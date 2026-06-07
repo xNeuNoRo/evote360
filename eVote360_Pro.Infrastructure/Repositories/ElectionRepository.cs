@@ -41,41 +41,31 @@ namespace eVote360_Pro.Infrastructure.Repositories
 
         public async Task<IEnumerable<string>> GetPartiesWithMissingCandidatesAsync()
         {
-            // Obtenemos los IDs de los puestos electivos activos
-            var activePositionIds = await _context
-                .ElectivePositions.Where(p => p.IsActive)
-                .Select(p => p.Id)
-                .ToListAsync();
+            // Obtenemos los partidos activos q no tienen candidatos asignados a ningún cargo activo
+            var activePositionCount = await _context.ElectivePositions.CountAsync(p => p.IsActive);
 
-            // Si no hay puestos activos, no hay nada por reportar en vd
-            if (!activePositionIds.Any())
+            // Si no hay cargos activos, quiere decir q no hay partidos con candidatos faltantes
+            if (activePositionCount == 0)
                 return Enumerable.Empty<string>();
 
-            // Obtenemos los partidos activos
-            var activeParties = await _context
+            // Obtenemos el nombre de los partidos activos junto
+            // con la cantidad de candidatos asignados a cargos activos
+            var partiesStatus = await _context
                 .PoliticalParties.Where(p => p.IsActive)
+                .Select(p => new
+                {
+                    p.Name,
+                    AssignedCount = _context.CandidatePostAssignments.Count(a =>
+                        a.PartyId == p.Id && a.Position.IsActive
+                    ),
+                })
                 .ToListAsync();
 
-            // Creamos una lista para almacenar los nombres de los partidos que tienen vacios en sus candidaturas
-            var partiesWithGaps = new List<string>();
-
-            // Iteramos en cada partido activo
-            foreach (var party in activeParties)
-            {
-                // Verificamos si tiene asignaciones para todos los puestos activos
-                var assignmentsCount = await _context.CandidatePostAssignments.CountAsync(a =>
-                    a.PartyId == party.Id && activePositionIds.Contains(a.PositionId)
-                );
-
-                // Si el número de asignaciones es menor que el número de puestos activos,
-                // quiere decir q hay un vacío en la boleta de ese partido
-                if (assignmentsCount < activePositionIds.Count)
-                {
-                    partiesWithGaps.Add(party.Name);
-                }
-            }
-
-            return partiesWithGaps;
+            // Devolvemos solo los nombres de los partidos
+            // que tienen menos candidatos asignados que cargos activos
+            return partiesStatus
+                .Where(x => x.AssignedCount < activePositionCount)
+                .Select(x => x.Name);
         }
 
         public async Task<(
