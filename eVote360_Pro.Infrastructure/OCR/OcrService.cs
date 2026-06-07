@@ -11,22 +11,22 @@ namespace eVote360_Pro.Infrastructure.OCR
     /// <summary>
     /// Servicio orquestador de OCR que utiliza el motor de visión abstracto para procesar identidades.
     /// </summary>
-    public class OCRService : IOCRService
+    public class OcrService : IOcrService
     {
         private readonly IFileService _fileService;
-        private readonly ILogger<OCRService> _logger;
+        private readonly ILogger<OcrService> _logger;
         private readonly string _tessdataPath;
 
-        public OCRService(IFileService fileService, ILogger<OCRService> logger)
+        public OcrService(IFileService fileService, ILogger<OcrService> logger)
         {
             _fileService = fileService;
             _logger = logger;
             _tessdataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
         }
 
-        public async Task<OCRResponse> ProcessIdentityCardAsync(IFormFile idCardImage)
+        public async Task<OcrResponse> ProcessIdentityCardAsync(IFormFile idCardImage)
         {
-            var response = new OCRResponse();
+            var response = new OcrResponse();
             string? tempPath = null;
             string? optimizedPath = null;
 
@@ -95,7 +95,7 @@ namespace eVote360_Pro.Infrastructure.OCR
         /// Extrae el número de cédula de identidad del texto OCR
         /// utilizando una expresión regular específica para el formato dominicano.
         /// </summary>
-        private string? ExtractCedulaNumber(string text)
+        private static string? ExtractCedulaNumber(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return null;
