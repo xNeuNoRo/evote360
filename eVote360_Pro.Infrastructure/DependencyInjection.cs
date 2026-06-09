@@ -64,6 +64,7 @@ namespace eVote360_Pro.Infrastructure
             services.AddScoped<IVoterParticipationRepository, VoterParticipationRepository>();
 
             // Seguridad y Auth
+            services.AddHttpContextAccessor();
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
             services.AddSingleton<ITokenService, TokenService>();

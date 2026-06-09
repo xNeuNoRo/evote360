@@ -8,6 +8,10 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPoliticalPartyService, PoliticalPartyService>();
+builder.Services.AddScoped<IPoliticalAllianceService, PoliticalAllianceService>();
+builder.Services.AddScoped<IPoliticalLeaderAssignmentService, PoliticalLeaderAssignmentService>();
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<ICandidatePostAssignmentService, CandidatePostAssignmentService>();
 builder.Services.AddScoped<IElectivePositionService, ElectivePositionService>();
 
 var app = builder.Build();
