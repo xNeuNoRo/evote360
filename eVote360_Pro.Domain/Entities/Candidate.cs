@@ -125,7 +125,7 @@ namespace eVote360_Pro.Domain.Entities
         /// </summary>
         public void Activate()
         {
-            IsActive = true;
+            IsActive = true; 
         }
     }
 }
