@@ -1,5 +1,6 @@
 using eVote360_Pro.Application;
 using eVote360_Pro.Infrastructure;
+using eVote360_Pro.WebApp.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+app.UseGlobalExceptionMiddleware();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
