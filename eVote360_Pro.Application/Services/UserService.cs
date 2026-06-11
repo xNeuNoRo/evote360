@@ -172,8 +172,7 @@ namespace eVote360_Pro.Application.Services
                     request.Username
                 );
 
-                bool hasAssignedParty =
-                    user.LeaderAssignment != null && user.LeaderAssignment.IsActive;
+                bool hasAssignedParty = user.LeaderAssignment != null;
                 bool isLastAdmin = await _userRepository.IsLastActiveAdminAsync(user.Id);
                 user.UpdateRole(request.RoleId, hasAssignedParty, isLastAdmin);
 

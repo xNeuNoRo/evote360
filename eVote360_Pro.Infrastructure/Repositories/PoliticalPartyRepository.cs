@@ -26,7 +26,7 @@ namespace eVote360_Pro.Infrastructure.Repositories
         public async Task<bool> HasActiveLeaderAsync(int partyId)
         {
             return await _context.PoliticalLeaderAssignments.AnyAsync(l =>
-                l.PartyId == partyId && l.IsActive
+                l.PartyId == partyId
             );
         }
 
