@@ -6,7 +6,7 @@ namespace eVote360_Pro.Domain.Entities
     /// <summary>
     /// Vinculación 1:1 entre Usuario y Partido.
     /// </summary>
-    public class PoliticalLeaderAssignment : ActivatableBaseEntity<Guid>
+    public class PoliticalLeaderAssignment : BaseEntity<Guid>
     {
         public int PartyId { get; private set; }
 
@@ -58,8 +58,7 @@ namespace eVote360_Pro.Domain.Entities
             return new PoliticalLeaderAssignment
             {
                 Id = userId, // PK es el FK hacia User
-                PartyId = partyId,
-                IsActive = true,
+                PartyId = partyId
             };
         }
     }

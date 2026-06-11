@@ -20,7 +20,6 @@ namespace eVote360_Pro.Infrastructure.Persistence.Configurations
 
             #region Properties configurations
 
-            builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
 
             builder.Property(x => x.CreatedAt).IsRequired();
             builder.Property(x => x.UpdatedAt).IsRequired(false);

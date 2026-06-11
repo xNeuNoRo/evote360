@@ -54,7 +54,7 @@ namespace eVote360_Pro.Infrastructure.Contexts
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            var entries = ChangeTracker.Entries<BaseEntity>();
+            var entries = ChangeTracker.Entries<IAuditableEntity>();
 
             foreach (var entry in entries)
             {

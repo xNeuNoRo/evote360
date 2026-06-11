@@ -5,7 +5,7 @@ namespace eVote360_Pro.Domain.Common
     /// Contiene las propiedades de auditoría gestionadas automáticamente por la infraestructura.
     /// </summary>
     /// <typeparam name="TId">El tipo de dato del identificador (ej: int, Guid).</typeparam>
-    public abstract class BaseEntity<TId>
+    public abstract class BaseEntity<TId> : IAuditableEntity
     {
         public TId Id { get; protected set; } = default!;
         public DateTime CreatedAt { get; set; }

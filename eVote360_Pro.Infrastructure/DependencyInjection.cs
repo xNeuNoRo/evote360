@@ -1,3 +1,4 @@
+using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Interfaces.Persistence;
 using eVote360_Pro.Domain.Interfaces.Providers;
 using eVote360_Pro.Domain.Interfaces.Repositories;
@@ -64,15 +65,15 @@ namespace eVote360_Pro.Infrastructure
             services.AddScoped<IVoterParticipationRepository, VoterParticipationRepository>();
 
             // Seguridad y Auth
-            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+            services.AddHttpContextAccessor();
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
-            services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<IVerificationCodeGenerator, VerificationCodeGenerator>();
 
             // Proveedores
             services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-            // Servicios de Shared
+            // Servicios de Seguridad
             services.Configure<FileSettings>(configuration.GetSection(FileSettings.SectionName));
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IOcrService, OcrService>();
