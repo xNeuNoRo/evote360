@@ -1,11 +1,12 @@
-using System.Security.Claims;
+using System.Text.Json;
+using eVote360_Pro.Application.DTOs.Auth.Responses;
 using eVote360_Pro.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace eVote360_Pro.Infrastructure.Security
 {
     /// <summary>
-    /// Implementación de infraestructura que extrae la identidad del usuario desde el HttpContext actual.
+    /// Implementación de infraestructura que extrae la identidad del usuario desde la sesión actual.
     /// </summary>
     public class CurrentUserService : ICurrentUserService
     {
@@ -16,33 +17,25 @@ namespace eVote360_Pro.Infrastructure.Security
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public Guid? UserId
+        private AuthResponse? GetUserSession()
         {
-            get
-            {
-                var claim =
-                    _httpContextAccessor
-                        .HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)
-                        ?.Value
-                    ?? _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
+            var session = _httpContextAccessor.HttpContext?.Session;
+            if (session == null)
+                return null;
 
-                return Guid.TryParse(claim, out var userId) ? userId : null;
-            }
+            var value = session.GetString("User");
+            if (string.IsNullOrEmpty(value))
+                return null;
+
+            return JsonSerializer.Deserialize<AuthResponse>(value);
         }
 
-        public int? PartyId
-        {
-            get
-            {
-                var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("party_id")?.Value;
-                return int.TryParse(claim, out var partyId) ? partyId : null;
-            }
-        }
+        public Guid? UserId => GetUserSession()?.UserId;
 
-        public bool IsAuthenticated =>
-            _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+        public int? PartyId => GetUserSession()?.PartyId;
 
-        public string? Role =>
-            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+        public bool IsAuthenticated => GetUserSession() != null;
+
+        public string? Role => GetUserSession()?.RoleName;
     }
 }

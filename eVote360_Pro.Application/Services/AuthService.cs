@@ -15,17 +15,14 @@ namespace eVote360_Pro.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly ITokenService _tokenService;
 
         public AuthService(
             IUserRepository userRepository,
-            IPasswordHasher passwordHasher,
-            ITokenService tokenService
+            IPasswordHasher passwordHasher
         )
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
-            _tokenService = tokenService;
         }
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -66,17 +63,12 @@ namespace eVote360_Pro.Application.Services
                 );
             }
 
-            // Generamos un token JWT
-            var tokenResult = _tokenService.GenerateToken(user);
-
             return new AuthResponse(
                 UserId: user.Id,
                 FullName: $"{user.FirstName} {user.LastName}",
                 Email: user.Email,
                 RoleName: user.Role?.Name ?? "Sin Rol",
-                PartyId: user.LeaderAssignment?.PartyId,
-                Token: tokenResult.Token,
-                Expiration: tokenResult.Expiration
+                PartyId: user.LeaderAssignment?.PartyId
             );
         }
     }
