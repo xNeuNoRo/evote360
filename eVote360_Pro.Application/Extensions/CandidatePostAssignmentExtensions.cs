@@ -8,23 +8,10 @@ namespace eVote360_Pro.Application.Extensions
     {
         public static BallotAssignmentResponse ToResponse(this CandidatePostAssignment assignment)
         {
-            var response = assignment.Adapt<BallotAssignmentResponse>();
-
-            return response with
-            {
-                PositionName = assignment.Position?.Name ?? "N/A",
-                CandidateName =
-                    assignment.Candidate != null
-                        ? $"{assignment.Candidate.FirstName} {assignment.Candidate.LastName}"
-                        : "N/A",
-                CandidatePhotoUrl = assignment.Candidate?.PhotoPath ?? string.Empty,
-                CandidateOriginalPartyName = assignment.Candidate?.OriginalParty?.Name ?? "N/A",
-            };
+            return assignment.Adapt<BallotAssignmentResponse>();
         }
 
-        public static IEnumerable<BallotAssignmentResponse> ToResponse(
-            this IEnumerable<CandidatePostAssignment> assignments
-        )
+        public static IEnumerable<BallotAssignmentResponse> ToResponse(this IEnumerable<CandidatePostAssignment> assignments)
         {
             return assignments.Select(a => a.ToResponse());
         }

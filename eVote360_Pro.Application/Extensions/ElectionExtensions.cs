@@ -6,23 +6,20 @@ namespace eVote360_Pro.Application.Extensions
 {
     public static class ElectionExtensions
     {
-        /// <summary>
-        /// Mapea una elección a su respuesta, calculando estados de activación complejos.
-        /// </summary>
         public static ElectionResponse ToResponse(
-            this Election election,
-            bool? canActivate = null,
-            IEnumerable<string>? missingParties = null
-        )
+            this Election election, 
+            bool? canActivate = null, 
+            IEnumerable<string>? missingParties = null)
         {
-            var response = election.Adapt<ElectionResponse>();
+            var adapter = election.BuildAdapter();
 
-            return response with
-            {
-                Status = election.Status.ToString(),
-                CanActivate = canActivate ?? false,
-                MissingParties = missingParties ?? Enumerable.Empty<string>(),
-            };
+            if (canActivate.HasValue)
+                adapter.AddParameters("CanActivate", canActivate.Value);
+
+            if (missingParties != null)
+                adapter.AddParameters("MissingParties", missingParties);
+
+            return adapter.AdaptToType<ElectionResponse>();
         }
 
         public static IEnumerable<ElectionResponse> ToResponse(this IEnumerable<Election> elections)

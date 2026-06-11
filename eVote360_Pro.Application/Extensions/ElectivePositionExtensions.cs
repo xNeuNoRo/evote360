@@ -4,21 +4,14 @@ using Mapster;
 
 namespace eVote360_Pro.Application.Extensions
 {
-    public static class PositionExtensions
+    public static class ElectivePositionExtensions
     {
         public static ElectivePositionResponse ToResponse(this ElectivePosition position)
         {
-            var response = position.Adapt<ElectivePositionResponse>();
-
-            return response with
-            {
-                IsImmutable = position.Votes.Any() || position.CandidatePostAssignments.Any(),
-            };
+            return position.Adapt<ElectivePositionResponse>();
         }
 
-        public static IEnumerable<ElectivePositionResponse> ToResponse(
-            this IEnumerable<ElectivePosition> positions
-        )
+        public static IEnumerable<ElectivePositionResponse> ToResponse(this IEnumerable<ElectivePosition> positions)
         {
             return positions.Select(p => p.ToResponse());
         }

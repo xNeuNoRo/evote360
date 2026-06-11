@@ -10,79 +10,128 @@ using eVote360_Pro.Domain.Interfaces.Repositories;
 
 namespace eVote360_Pro.Application.Services
 {
+    /// <summary>
+    /// Implementación del servicio de asignación de mandos.
+    /// </summary>
     public class PoliticalLeaderAssignmentService : IPoliticalLeaderAssignmentService
     {
         private readonly IPoliticalLeaderAssignmentsRepository _assignmentRepository;
         private readonly IUserRepository _userRepository;
         private readonly IPoliticalPartiesRepository _partyRepository;
+        private readonly IElectionRepository _electionRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public PoliticalLeaderAssignmentService(
             IPoliticalLeaderAssignmentsRepository assignmentRepository,
             IUserRepository userRepository,
             IPoliticalPartiesRepository partyRepository,
+            IElectionRepository electionRepository,
             IUnitOfWork unitOfWork
         )
         {
             _assignmentRepository = assignmentRepository;
             _userRepository = userRepository;
             _partyRepository = partyRepository;
+            _electionRepository = electionRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<LeaderAssignmentResponse>> GetAllAsync()
         {
-            var assignments = await _assignmentRepository.GetAllAsync(new QueryOptions<PoliticalLeaderAssignment>
+            var options = new QueryOptions<PoliticalLeaderAssignment>
             {
-                Includes = new() { a => a.User, a => a.Party }
-            });
-
+                Includes = new() { a => a.User, a => a.Party },
+                IsTracking = false,
+            };
+            var assignments = await _assignmentRepository.GetAllAsync(options);
             return assignments.ToResponse();
         }
 
         public async Task CreateAssignmentAsync(SaveLeaderAssignmentRequest request)
         {
-            // 1. Validar que el usuario exista y tenga rol "Dirigente"
-            var user = await _userRepository.GetByIdAsync(request.UserId, u => u.Role!)
-                       ?? throw new DomainException("El usuario especificado no existe.", "User.NotFound");
-
-            bool isDirigente = user.Role?.Name == SystemRoles.PoliticalLeader;
-
-            // 2. Validar que el usuario no tenga ya un partido
-            if (await _assignmentRepository.IsUserAlreadyLeaderAsync(request.UserId))
+            await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                throw new DomainException("El usuario ya tiene un partido político asignado.", "Assignment.UserAlreadyHasParty");
-            }
+                await EnsureNoActiveElectionAsync();
 
-            // 3. Validar que el partido no tenga ya un dirigente
-            if (await _assignmentRepository.HasPartyAlreadyLeaderAsync(request.PartyId))
+                var user =
+                    await _userRepository.GetByIdAsync(request.UserId, u => u.Role!)
+                    ?? throw new ValidationBusinessException(
+                        nameof(request.UserId),
+                        "Usuario no encontrado.",
+                        "User.NotFound"
+                    );
+
+                if (await _assignmentRepository.IsUserAlreadyLeaderAsync(request.UserId))
+                    throw new ValidationBusinessException(
+                        nameof(request.UserId),
+                        "Usuario ya es dirigente.",
+                        "Assignment.UserAlreadyHasParty"
+                    );
+
+                if (await _assignmentRepository.HasPartyAlreadyLeaderAsync(request.PartyId))
+                    throw new ValidationBusinessException(
+                        nameof(request.PartyId),
+                        "Partido ya tiene dirigente.",
+                        "Assignment.PartyAlreadyHasLeader"
+                    );
+
+                var party =
+                    await _partyRepository.GetByIdAsync(request.PartyId)
+                    ?? throw new ValidationBusinessException(
+                        nameof(request.PartyId),
+                        "Partido no encontrado.",
+                        "PoliticalParty.NotFound"
+                    );
+
+                var assignment = PoliticalLeaderAssignment.Create(
+                    request.UserId,
+                    request.PartyId,
+                    user.IsActive,
+                    user.Role?.Name == SystemRoles.PoliticalLeader,
+                    party.IsActive
+                );
+                await _assignmentRepository.AddAsync(assignment);
+                await _unitOfWork.CommitAsync();
+            }
+            catch
             {
-                throw new DomainException("El partido político ya tiene un dirigente asignado.", "Assignment.PartyAlreadyHasLeader");
+                await _unitOfWork.RollbackAsync();
+                throw;
             }
-
-            var party = await _partyRepository.GetByIdAsync(request.PartyId)
-                        ?? throw new DomainException("El partido político especificado no existe.", "PoliticalParty.NotFound");
-
-            // Crear la asignación utilizando el factory method del dominio que encapsula el resto de validaciones
-            var assignment = PoliticalLeaderAssignment.Create(
-                request.UserId,
-                request.PartyId,
-                user.IsActive,
-                isDirigente,
-                party.IsActive
-            );
-
-            await _assignmentRepository.AddAsync(assignment);
-            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task RemoveAssignmentAsync(Guid userId)
         {
-            var assignment = await _assignmentRepository.GetByIdAsync(userId)
-                             ?? throw new DomainException("La asignación no existe.", "Assignment.NotFound");
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await EnsureNoActiveElectionAsync();
 
-            _assignmentRepository.Delete(assignment);
-            await _unitOfWork.SaveChangesAsync();
+                var assignment =
+                    await _assignmentRepository.GetByIdAsync(userId)
+                    ?? throw new BusinessException(
+                        "Asignación no encontrada.",
+                        "Assignment.NotFound"
+                    );
+
+                _assignmentRepository.Delete(assignment);
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task EnsureNoActiveElectionAsync()
+        {
+            if (await _electionRepository.AnyActiveElectionExistsAsync())
+                throw new BusinessException(
+                    "No se permiten gestionar dirigentes mientras exista una elección activa.",
+                    "Election.ActiveAlreadyExists"
+                );
         }
     }
 }

@@ -1,12 +1,15 @@
-using eVote360_Pro.Application.ViewModels.DashboardViewModels;
-using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Application.DTOs.Voting.Responses;
-using eVote360_Pro.Domain.Interfaces.Repositories;
+using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Entities;
+using eVote360_Pro.Domain.Enums;
+using eVote360_Pro.Domain.Interfaces.Repositories;
 
 namespace eVote360_Pro.Application.Services
 {
+    /// <summary>
+    /// Implementación del servicio de Dashboards.
+    /// </summary>
     public class DashboardService : IDashboardService
     {
         private readonly IElectionRepository _electionRepository;
@@ -30,14 +33,16 @@ namespace eVote360_Pro.Application.Services
             _resultService = resultService;
         }
 
-        public async Task<DashboardViewModel> GetDashboardAsync()
+        public async Task<DashboardStatisticsResponse> GetGeneralStatisticsAsync()
         {
-            var totalCitizens = await _citizenRepository.CountAsync();
-            var totalParties = await _politicalPartiesRepository.CountAsync();
-            var totalElections = await _electionRepository.CountAsync();
+            var totalCitizensTask = _citizenRepository.CountAsync();
+            var totalPartiesTask = _politicalPartiesRepository.CountAsync();
+            var totalElectionsTask = _electionRepository.CountAsync();
+
+            await Task.WhenAll(totalCitizensTask, totalPartiesTask, totalElectionsTask);
 
             var activeElection = await _electionRepository.GetActiveElectionAsync();
-            
+
             int voterParticipationCount = 0;
             string? activeElectionName = null;
 
@@ -50,28 +55,25 @@ namespace eVote360_Pro.Application.Services
                     );
             }
 
-            return new DashboardViewModel
-            {
-                TotalElections = totalElections,
-                ActiveElectionName = activeElectionName,
-                VoterParticipationCount = voterParticipationCount,
-                TotalCitizens = totalCitizens,
-                TotalParties = totalParties,
-            };
+            return new DashboardStatisticsResponse(
+                TotalElections: totalElectionsTask.Result,
+                ActiveElectionName: activeElectionName,
+                VoterParticipationCount: voterParticipationCount,
+                TotalCitizens: totalCitizensTask.Result,
+                TotalParties: totalPartiesTask.Result
+            );
         }
 
         public async Task<ResultReportResponse?> GetAdminDashboardAsync(int electoralYear)
         {
-            var allElections = await _electionRepository.GetAllAsync(
-                new QueryOptions<Election>
-                {
-                    IsTracking = false,
-                }
-            );
+            var options = new QueryOptions<Election>
+            {
+                Filter = e =>
+                    e.RealizationDate.Year == electoralYear && e.Status == ElectionStatus.Finished,
+                IsTracking = false,
+            };
 
-            var election = allElections.FirstOrDefault(e =>
-                e.RealizationDate.Year == electoralYear && !e.IsActive
-            );
+            var election = await _electionRepository.GetFirstOrDefaultAsync(options);
 
             if (election == null)
                 return null;
@@ -85,4 +87,3 @@ namespace eVote360_Pro.Application.Services
         }
     }
 }
-

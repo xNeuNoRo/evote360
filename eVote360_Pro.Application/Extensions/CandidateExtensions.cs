@@ -8,20 +8,10 @@ namespace eVote360_Pro.Application.Extensions
     {
         public static CandidateResponse ToResponse(this Candidate candidate)
         {
-            var response = candidate.Adapt<CandidateResponse>();
-
-            return response with
-            {
-                FullName = $"{candidate.FirstName} {candidate.LastName}",
-                PhotoUrl = candidate.PhotoPath,
-                OriginalPartyName = candidate.OriginalParty?.Name ?? "N/A",
-                IsImmutable = candidate.Votes.Any(),
-            };
+            return candidate.Adapt<CandidateResponse>();
         }
 
-        public static IEnumerable<CandidateResponse> ToResponse(
-            this IEnumerable<Candidate> candidates
-        )
+        public static IEnumerable<CandidateResponse> ToResponse(this IEnumerable<Candidate> candidates)
         {
             return candidates.Select(c => c.ToResponse());
         }

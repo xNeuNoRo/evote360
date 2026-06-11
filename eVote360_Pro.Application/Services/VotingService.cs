@@ -2,29 +2,37 @@ using eVote360_Pro.Application.DTOs.Voting.Requests;
 using eVote360_Pro.Application.DTOs.Voting.Responses;
 using eVote360_Pro.Application.Extensions;
 using eVote360_Pro.Application.Interfaces.Services;
+using eVote360_Pro.Application.Models.Emails;
+using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Entities;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.Domain.Interfaces.Persistence;
 using eVote360_Pro.Domain.Interfaces.Providers;
 using eVote360_Pro.Domain.Interfaces.Repositories;
 using eVote360_Pro.Domain.Interfaces.Security;
+using eVote360_Pro.Domain.ValueObjects;
 using eVote360_Pro.Shared.Interfaces.Messaging;
 using eVote360_Pro.Shared.Interfaces.OCR;
+using eVote360_Pro.Shared.Interfaces.Storage;
 
 namespace eVote360_Pro.Application.Services
 {
+    /// <summary>
+    /// Implementación del servicio de votación.
+    /// </summary>
     public class VotingService : IVotingService
     {
         private readonly IElectionRepository _electionRepository;
         private readonly ICitizenRepository _citizenRepository;
         private readonly IVoterParticipationRepository _voterParticipationRepository;
         private readonly IVerificationCodeRepository _verificationCodeRepository;
-        private readonly ICandidatePostAssignmentsRepository _candidatePostAssignmentsRepository;
-        private readonly IElectivePositionsRepository _electivePositionsRepository;
+        private readonly ICandidatePostAssignmentsRepository _assignmentRepository;
+        private readonly IElectivePositionsRepository _positionRepository;
         private readonly IVoteRepository _voteRepository;
         private readonly IOcrService _ocrService;
         private readonly IEmailService _emailService;
-        private readonly IVerificationCodeGenerator _verificationCodeGenerator;
+        private readonly IFileService _fileService;
+        private readonly IVerificationCodeGenerator _codeGenerator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTimeProvider;
 
@@ -33,12 +41,13 @@ namespace eVote360_Pro.Application.Services
             ICitizenRepository citizenRepository,
             IVoterParticipationRepository voterParticipationRepository,
             IVerificationCodeRepository verificationCodeRepository,
-            ICandidatePostAssignmentsRepository candidatePostAssignmentsRepository,
-            IElectivePositionsRepository electivePositionsRepository,
+            ICandidatePostAssignmentsRepository assignmentRepository,
+            IElectivePositionsRepository positionRepository,
             IVoteRepository voteRepository,
             IOcrService ocrService,
             IEmailService emailService,
-            IVerificationCodeGenerator verificationCodeGenerator,
+            IFileService fileService,
+            IVerificationCodeGenerator codeGenerator,
             IUnitOfWork unitOfWork,
             IDateTimeProvider dateTimeProvider
         )
@@ -47,77 +56,95 @@ namespace eVote360_Pro.Application.Services
             _citizenRepository = citizenRepository;
             _voterParticipationRepository = voterParticipationRepository;
             _verificationCodeRepository = verificationCodeRepository;
-            _candidatePostAssignmentsRepository = candidatePostAssignmentsRepository;
-            _electivePositionsRepository = electivePositionsRepository;
+            _assignmentRepository = assignmentRepository;
+            _positionRepository = positionRepository;
             _voteRepository = voteRepository;
             _ocrService = ocrService;
             _emailService = emailService;
-            _verificationCodeGenerator = verificationCodeGenerator;
+            _fileService = fileService;
+            _codeGenerator = codeGenerator;
             _unitOfWork = unitOfWork;
             _dateTimeProvider = dateTimeProvider;
         }
 
         public async Task<bool> ValidateAndSendOtpAsync(ValidateElectorRequest request)
         {
-            var election = await _electionRepository.GetActiveElectionAsync();
-            if (election == null)
-                throw new DomainException(
+            // Validamos que haya una elección activa
+            var election =
+                await _electionRepository.GetActiveElectionAsync()
+                ?? throw new BusinessException(
                     "No existe una elección activa.",
                     "Voting.NoActiveElection"
                 );
 
-            var citizen = await _citizenRepository.GetByIdentityDocumentAsync(
-                request.IdentityDocument.Trim()
-            );
+            // Validamos la cedula  ingresada (Este valueObject encapsula la validacion del formato de la cedula)
+            var identityDocument = IdentityDocument.Create(request.IdentityDocument);
 
-            if (citizen == null)
-                throw new DomainException(
+            // Validamos que el ciudadano exista y esté activo
+            var citizen =
+                await _citizenRepository.GetByIdentityDocumentAsync(identityDocument.Value)
+                ?? throw new ValidationBusinessException(
+                    nameof(request.IdentityDocument),
                     "Ciudadano no encontrado.",
                     "Voting.CitizenNotFound"
                 );
 
+            // Si el ciudadano está inactivo, lo bloqueamos
             if (!citizen.IsActive)
-                throw new DomainException(
+                throw new BusinessException(
                     "El ciudadano se encuentra inactivo.",
                     "Voting.CitizenInactive"
                 );
 
-            if (await _voterParticipationRepository.HasAlreadyVotedAsync(
-                    citizen.Id,
-                    election.Id
-                ))
+            // Si ya voto, lo bloqueamos
+            if (await _voterParticipationRepository.HasAlreadyVotedAsync(citizen.Id, election.Id))
             {
-                throw new DomainException(
+                throw new BusinessException(
                     "Este ciudadano ya emitió su voto en la elección activa.",
                     "Voting.AlreadyVoted"
                 );
             }
 
+            // Si el archivo subido no es una imagen válida, lo bloqueamos
+            if (!_fileService.IsImageValid(request.IdCardImage))
+                throw new ValidationBusinessException(
+                    nameof(request.IdCardImage),
+                    "La imagen de la cédula no es válida o es muy pesada.",
+                    "General.InvalidFile"
+                );
+
+            // Validamos la cedula usando OCR
             var ocrResult = await _ocrService.ProcessIdentityCardAsync(request.IdCardImage);
+
+            // Si el OCR falla o determina que el documento no es válido, lo bloqueamos
             if (!ocrResult.IsSuccess || !ocrResult.IsDocumentValid)
-                throw new DomainException(
-                    "No fue posible validar el documento de identidad.",
+                throw new ValidationBusinessException(
+                    nameof(request.IdCardImage),
+                    "No fue posible validar el documento en la imagen.",
                     "Voting.OcrInvalid"
                 );
 
-            if (!string.Equals(
-                    request.IdentityDocument.Trim(),
+            // Si el número extraído por OCR no coincide con el ingresado, lo bloqueamos
+            if (
+                !string.Equals(
+                    identityDocument.Value,
                     ocrResult.IdentityNumber?.Trim(),
                     StringComparison.OrdinalIgnoreCase
-                ))
+                )
+            )
             {
-                throw new DomainException(
-                    "El número de cédula extraído por OCR no coincide.",
+                throw new ValidationBusinessException(
+                    nameof(request.IdCardImage),
+                    "El número extraído no coincide con el ingresado.",
                     "Voting.OcrMismatch"
                 );
             }
 
-            await _verificationCodeRepository.InvalidatePreviousCodesAsync(
-                citizen.Id,
-                election.Id
-            );
+            // Invalidamos los codigos OTP viejos
+            await _verificationCodeRepository.InvalidatePreviousCodesAsync(citizen.Id, election.Id);
 
-            var otpCode = _verificationCodeGenerator.Generate(6);
+            // Generamos un nuevo codigo OTP
+            var otpCode = _codeGenerator.Generate(6, useAlphanumeric: false);
             var verificationCode = VerificationCode.Create(
                 citizen.Id,
                 election.Id,
@@ -125,24 +152,25 @@ namespace eVote360_Pro.Application.Services
                 _dateTimeProvider.UtcNow
             );
 
+            // Lo persistimos
             await _verificationCodeRepository.AddAsync(verificationCode);
             await _unitOfWork.SaveChangesAsync();
 
-            var emailModel = new OtpEmailModel(
+            // Enviamos el codigo por correo
+            var emailModel = new OtpVerificationModel(
                 $"{citizen.FirstName} {citizen.LastName}",
                 otpCode
             );
-
             var emailSent = await _emailService.SendEmailAsync(
                 citizen.Email,
-                "Código OTP para votación.",
+                "Su Código de Verificación Electoral",
                 "OtpVerification",
                 emailModel
             );
 
             if (!emailSent)
-                throw new DomainException(
-                    "No se pudo enviar el código OTP por correo electrónico.",
+                throw new BusinessException(
+                    "Fallo en el servicio de correos.",
                     "Voting.EmailFailed"
                 );
 
@@ -151,6 +179,7 @@ namespace eVote360_Pro.Application.Services
 
         public async Task<VerifyCodeResponse> VerifyOtpAsync(VerifyCodeRequest request)
         {
+            // El repositorio ya filtra por IsUsed == false y ExpirationDate > now
             var code = await _verificationCodeRepository.GetValidCodeAsync(
                 request.CitizenId,
                 request.ElectionId,
@@ -158,69 +187,66 @@ namespace eVote360_Pro.Application.Services
             );
 
             if (code == null)
-                return new VerifyCodeResponse(false, "Código inválido o expirado.");
+            {
+                throw new ValidationBusinessException(
+                    nameof(request.Code),
+                    "Código inválido o expirado.",
+                    "VerificationCode.Invalid"
+                );
+            }
 
-            try
-            {
-                code.Use(_dateTimeProvider.UtcNow);
-                await _unitOfWork.SaveChangesAsync();
-                return new VerifyCodeResponse(true, null);
-            }
-            catch (DomainException exception)
-            {
-                return new VerifyCodeResponse(false, exception.Message);
-            }
+            code.Use(_dateTimeProvider.UtcNow);
+
+            _verificationCodeRepository.Update(code);
+            await _unitOfWork.SaveChangesAsync();
+
+            return new VerifyCodeResponse(IsValid: true, ErrorMessage: null);
         }
 
         public async Task<VoterBallotResponse> GetBallotAsync(Guid electionId)
         {
-            var election = await _electionRepository.GetByIdAsync(electionId);
-            if (election == null || !election.IsActive)
-                throw new DomainException(
-                    "Elección inválida o no activa.",
+            var election =
+                await _electionRepository.GetByIdAsync(electionId)
+                ?? throw new BusinessException("Elección inválida.", "Voting.InvalidElection");
+
+            if (!election.IsActive || election.Status != Domain.Enums.ElectionStatus.Active)
+                throw new BusinessException(
+                    "La elección no se encuentra activa.",
                     "Voting.InvalidElection"
                 );
 
-            var positions = await _electivePositionsRepository.GetAllAsync(
-                new Domain.Common.QueryOptions<ElectivePosition>
+            var positions = await _positionRepository.GetAllAsync(
+                new QueryOptions<ElectivePosition> { Filter = p => p.IsActive, IsTracking = false }
+            );
+
+            var assignments = await _assignmentRepository.GetAllAsync(
+                new QueryOptions<CandidatePostAssignment>
                 {
-                    Filter = position => position.IsActive,
+                    Filter = a => a.Position.IsActive && a.Candidate.IsActive && a.Party.IsActive,
+                    Includes = new() { a => a.Candidate, a => a.Party },
+                    IsTracking = false,
                 }
             );
 
-            var assignments = await _candidatePostAssignmentsRepository.GetAllAsync(
-                new Domain.Common.QueryOptions<CandidatePostAssignment>
+            var ballotPositions = positions
+                .Select(p =>
                 {
-                    Filter = assignment =>
-                        assignment.Position.IsActive
-                        && assignment.Candidate.IsActive
-                        && assignment.Party.IsActive,
-                    Includes =
-                    {
-                        assignment => assignment.Candidate,
-                        assignment => assignment.Party,
-                        assignment => assignment.Position,
-                    },
-                }
-            );
+                    var candidatesForPosition = assignments
+                        .Where(a => a.PositionId == p.Id)
+                        .Select(a => new BallotCandidateResponse(
+                            a.CandidateId,
+                            $"{a.Candidate.FirstName} {a.Candidate.LastName}",
+                            a.PartyId,
+                            a.Party.Name,
+                            a.Party.Acronym,
+                            a.Candidate.PhotoPath,
+                            a.Party.LogoPath
+                        ))
+                        .ToList();
 
-            var ballotPositions = positions.Select(position =>
-            {
-                var candidates = assignments
-                    .Where(a => a.PositionId == position.Id)
-                    .Select(a => new BallotCandidateResponse(
-                        a.CandidateId,
-                        $"{a.Candidate.FirstName} {a.Candidate.LastName}",
-                        a.PartyId,
-                        a.Party.Name,
-                        a.Party.Acronym,
-                        a.Candidate.PhotoPath,
-                        a.Party.LogoPath
-                    ))
-                    .ToList();
-
-                return position.ToBallotPosition(candidates);
-            }).ToList();
+                    return p.ToBallotPosition(candidatesForPosition);
+                })
+                .ToList();
 
             return election.ToVoterBallot(ballotPositions);
         }
@@ -231,46 +257,41 @@ namespace eVote360_Pro.Application.Services
 
             try
             {
-                var election = await _electionRepository.GetByIdAsync(request.ElectionId);
-                if (election == null || !election.IsActive)
-                    throw new DomainException(
-                        "Elección inválida o no activa.",
-                        "Voting.InvalidElection"
-                    );
+                var election =
+                    await _electionRepository.GetByIdAsync(request.ElectionId)
+                    ?? throw new BusinessException("Elección inválida.", "Voting.InvalidElection");
 
-                var citizen = await _citizenRepository.GetByIdAsync(request.CitizenId);
-                if (citizen == null || !citizen.IsActive)
-                    throw new DomainException(
-                        "Ciudadano inválido o inactivo.",
-                        "Voting.InvalidCitizen"
-                    );
+                var citizen =
+                    await _citizenRepository.GetByIdAsync(request.CitizenId)
+                    ?? throw new BusinessException("Ciudadano inválido.", "Voting.InvalidCitizen");
 
-                if (await _voterParticipationRepository.HasAlreadyVotedAsync(
+                if (
+                    await _voterParticipationRepository.HasAlreadyVotedAsync(
                         request.CitizenId,
                         request.ElectionId
-                    ))
+                    )
+                )
                 {
-                    throw new DomainException(
-                        "Este ciudadano ya ha registrado su participación.",
+                    throw new BusinessException(
+                        "Doble intento de voto bloqueado.",
                         "Voting.AlreadyVoted"
                     );
                 }
 
-                var usedCode = await _verificationCodeRepository.GetFirstOrDefaultAsync(
-                    new Domain.Common.QueryOptions<VerificationCode>
-                    {
-                        Filter = code =>
-                            code.CitizenId == request.CitizenId
-                            && code.ElectionId == request.ElectionId
-                            && code.Code == request.VerificationCode
-                            && code.IsUsed,
-                        IsTracking = true,
-                    }
-                );
-
-                if (usedCode == null)
-                    throw new DomainException(
-                        "El código OTP debe haberse utilizado antes de enviar el voto.",
+                var usedCode =
+                    await _verificationCodeRepository.GetFirstOrDefaultAsync(
+                        new QueryOptions<VerificationCode>
+                        {
+                            Filter = c =>
+                                c.CitizenId == request.CitizenId
+                                && c.ElectionId == request.ElectionId
+                                && c.Code == request.VerificationCode
+                                && c.IsUsed,
+                            IsTracking = false,
+                        }
+                    )
+                    ?? throw new BusinessException(
+                        "Intento de voto sin OTP validado.",
                         "Voting.CodeNotUsed"
                     );
 
@@ -283,8 +304,8 @@ namespace eVote360_Pro.Application.Services
 
                 await _voterParticipationRepository.AddAsync(participation);
 
-                var votes = request.Selections
-                    .Select(selection =>
+                var votes = request
+                    .Selections.Select(selection =>
                         Vote.Create(
                             request.ElectionId,
                             selection.PositionId,
@@ -295,8 +316,22 @@ namespace eVote360_Pro.Application.Services
                     .ToList();
 
                 await _voteRepository.AddRangeAsync(votes);
-                await _unitOfWork.SaveChangesAsync();
+
                 await _unitOfWork.CommitAsync();
+
+                var confirmationModel = new VoteConfirmationModel(
+                    $"{citizen.FirstName} {citizen.LastName}",
+                    election.Name,
+                    participation.Id.ToString().ToUpper().Substring(0, 8),
+                    _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm")
+                );
+
+                await _emailService.SendEmailAsync(
+                    citizen.Email,
+                    $"Comprobante de Votación - {election.Name}",
+                    "VoteConfirmation",
+                    confirmationModel
+                );
             }
             catch
             {
@@ -304,7 +339,5 @@ namespace eVote360_Pro.Application.Services
                 throw;
             }
         }
-
-        private sealed record OtpEmailModel(string FullName, string Code) : IEmailModel;
     }
 }

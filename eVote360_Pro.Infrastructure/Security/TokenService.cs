@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using eVote360_Pro.Domain.Entities;
+using eVote360_Pro.Domain.Interfaces.Providers;
 using eVote360_Pro.Domain.Interfaces.Security;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -15,13 +16,15 @@ namespace eVote360_Pro.Infrastructure.Security
     public class TokenService : ITokenService
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
-        public TokenService(IOptions<JwtSettings> jwtOptions)
+        public TokenService(IOptions<JwtSettings> jwtOptions, IDateTimeProvider dateTimeProvider)
         {
             _jwtSettings = jwtOptions.Value;
+            _dateTimeProvider = dateTimeProvider;
         }
 
-        public string GenerateToken(User user)
+        public TokenResponse GenerateToken(User user)
         {
             // Creamos la security key a partir del secreto configurado
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
@@ -50,12 +53,14 @@ namespace eVote360_Pro.Infrastructure.Security
                 claims.Add(new Claim("party_id", user.LeaderAssignment.PartyId.ToString()));
             }
 
+            var expiration = _dateTimeProvider.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
+
             // Creamos el descriptor del token, que incluye los claims,
             // la expiración, el emisor, la audiencia y las credenciales de firma
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims), // Asignamos los claims al token
-                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes), // Establecemos la expiración del token
+                Expires = expiration, // Establecemos la expiración del token
                 Issuer = _jwtSettings.Issuer, // Establecemos el emisor del token
                 Audience = _jwtSettings.Audience, // Establecemos la audiencia del token
                 SigningCredentials = credentials, // Asignamos las credenciales de firma para asegurar la integridad del token
@@ -66,8 +71,8 @@ namespace eVote360_Pro.Infrastructure.Security
             // Finalmente, generamos el token y lo serializamos
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            // Devolvemos el token serializado como string
-            return tokenHandler.WriteToken(token);
+            // Devolvemos el resultado encapsulado
+            return new TokenResponse(tokenHandler.WriteToken(token), expiration);
         }
     }
 }
