@@ -78,7 +78,26 @@ namespace eVote360_Pro.Infrastructure
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IOcrService, OcrService>();
 
-            // Configuracion de Email
+            // Configuracion de Email (FluentEmail con SMTP)
+            var smtpHost = configuration.GetValue<string>("SmtpSettings:Host");
+            var smtpPort = configuration.GetValue<int>("SmtpSettings:Port");
+            var senderEmail = configuration.GetValue<string>("SmtpSettings:SenderEmail");
+            var senderName = configuration.GetValue<string>("SmtpSettings:SenderName");
+            var username = configuration.GetValue<string>("SmtpSettings:Username");
+            var password = configuration.GetValue<string>("SmtpSettings:Password");
+            var enableSsl = configuration.GetValue<bool>("SmtpSettings:EnableSsl");
+
+            if (!string.IsNullOrEmpty(smtpHost) && !string.IsNullOrEmpty(senderEmail))
+            {
+                services
+                    .AddFluentEmail(senderEmail, senderName)
+                    .AddSmtpSender(new System.Net.Mail.SmtpClient(smtpHost, smtpPort)
+                    {
+                        Credentials = new System.Net.NetworkCredential(username, password),
+                        EnableSsl = enableSsl
+                    });
+            }
+
             services.AddScoped<IEmailService, FluentEmailService>();
 
             return services;

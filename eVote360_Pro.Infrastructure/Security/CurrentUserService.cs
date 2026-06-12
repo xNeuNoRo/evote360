@@ -37,5 +37,9 @@ namespace eVote360_Pro.Infrastructure.Security
         public bool IsAuthenticated => GetUserSession() != null;
 
         public string? Role => GetUserSession()?.RoleName;
+
+        public string? FullName => GetUserSession()?.FullName;
+
+        public string? Email => GetUserSession()?.Email;
     }
 }
