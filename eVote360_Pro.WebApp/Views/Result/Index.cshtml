@@ -53,7 +53,7 @@
             <h4 class="text-lg font-black text-gray-900 mb-1 line-clamp-1">@election.Name</h4>
             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">Realizada el @election.RealizationDate.ToString("dd MMM yyyy")</p>
             
-            <a asp-action="Details" asp-route-id="@election.Id" class="w-full flex justify-center items-center gap-2 py-3 bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-colors">
+            <a asp-action="Details" asp-route-id="@election.Id" style="view-transition-name: card-result-@election.Id;" class="w-full flex justify-center items-center gap-2 py-3 bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-colors">
                 Explorar Resultados
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </a>
