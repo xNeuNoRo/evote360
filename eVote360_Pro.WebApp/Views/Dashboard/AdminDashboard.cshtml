@@ -81,6 +81,76 @@
     </div>
 </div>
 
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Últimos Partidos -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="flag" class="w-5 h-5 text-gray-400"></i>
+                Partidos Recientes
+            </h3>
+            <a asp-controller="PoliticalParty" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Ver todos</a>
+        </div>
+        @if (Model.RecentParties.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var party in Model.RecentParties)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <img src="@party.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/parties/default.png'" />
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@party.Name</p>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">@party.Acronym</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No hay partidos registrados</p>
+            </div>
+        }
+    </div>
+
+    <!-- Últimos Ciudadanos -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-gray-400"></i>
+                Ciudadanos Recientes
+            </h3>
+            <a asp-controller="Citizen" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Ver padrón</a>
+        </div>
+        @if (Model.RecentCitizens.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var citizen in Model.RecentCitizens)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                            @citizen.FullName.Substring(0,1)
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@citizen.FullName</p>
+                            <p class="text-xs font-medium text-gray-500">Cédula: <span class="font-bold text-gray-900">@citizen.IdentityDocument</span></p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No hay ciudadanos en el padrón</p>
+            </div>
+        }
+    </div>
+</div>
+
 @{
     var reportData = ViewBag.ReportData as eVote360_Pro.Application.DTOs.Voting.Responses.ResultReportResponse;
     var reportJson = reportData != null ? System.Text.Json.JsonSerializer.Serialize(reportData, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }) : "null";

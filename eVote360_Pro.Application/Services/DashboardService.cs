@@ -68,12 +68,30 @@ namespace eVote360_Pro.Application.Services
                     );
             }
 
+            var recentCitizens = await _citizenRepository.GetAllAsync(new QueryOptions<Citizen>
+            {
+                IsTracking = false
+            });
+            var recentCitizensDto = recentCitizens.OrderByDescending(c => c.Id).Take(5)
+                .Select(c => new RecentCitizenDto($"{c.FirstName} {c.LastName}", c.IdentityDocument, "Reciente"))
+                .ToList();
+
+            var recentParties = await _politicalPartiesRepository.GetAllAsync(new QueryOptions<PoliticalParty>
+            {
+                IsTracking = false
+            });
+            var recentPartiesDto = recentParties.OrderByDescending(p => p.Id).Take(5)
+                .Select(p => new RecentPartyDto(p.Name, p.Acronym, p.LogoPath))
+                .ToList();
+
             return new DashboardStatisticsResponse(
                 TotalElections: totalElections,
                 ActiveElectionName: activeElectionName,
                 VoterParticipationCount: voterParticipationCount,
                 TotalCitizens: totalCitizens,
-                TotalParties: totalParties
+                TotalParties: totalParties,
+                RecentCitizens: recentCitizensDto,
+                RecentParties: recentPartiesDto
             );
         }
 
@@ -116,7 +134,7 @@ namespace eVote360_Pro.Application.Services
 
             if (assignment == null)
             {
-                return new LeaderDashboardStatisticsResponse(0, 0, 0, 0, 0);
+                return new LeaderDashboardStatisticsResponse(0, 0, 0, 0, 0, new(), new());
             }
 
             var partyId = assignment.PartyId;
@@ -130,10 +148,24 @@ namespace eVote360_Pro.Application.Services
             int activeCandidates = allCandidates.Count(c => c.IsActive);
             int inactiveCandidates = allCandidates.Count(c => !c.IsActive);
 
-            var approvedAlliances = await _alliancesRepository.CountAsync(a =>
-                (a.RequesterPartyId == partyId || a.ReceiverPartyId == partyId)
-                && a.Status == AllianceStatus.Accepted
-            );
+            var recentCandidates = allCandidates.OrderByDescending(c => c.Id).Take(5)
+                .Select(c => new RecentCandidateDto($"{c.FirstName} {c.LastName}", "Candidato", c.PhotoPath))
+                .ToList();
+
+            var allAlliancesOpts = new QueryOptions<PoliticalAlliance>
+            {
+                Filter = a => (a.RequesterPartyId == partyId || a.ReceiverPartyId == partyId) && a.Status == AllianceStatus.Accepted,
+                Includes = new() { a => a.RequesterParty, a => a.ReceiverParty },
+                IsTracking = false
+            };
+            var allAlliances = await _alliancesRepository.GetAllAsync(allAlliancesOpts);
+            
+            var approvedAlliances = allAlliances.Count();
+            
+            var alliedParties = allAlliances.Take(5).Select(a => {
+                var otherParty = a.RequesterPartyId == partyId ? a.ReceiverParty : a.RequesterParty;
+                return new AlliedPartyDto(otherParty.Name, otherParty.Acronym, otherParty.LogoPath);
+            }).ToList();
 
             var pendingAlliances = await _alliancesRepository.CountAsync(a =>
                 a.ReceiverPartyId == partyId && a.Status == AllianceStatus.Pending
@@ -153,7 +185,9 @@ namespace eVote360_Pro.Application.Services
                 inactiveCandidates,
                 approvedAlliances,
                 pendingAlliances,
-                assignedCandidates
+                assignedCandidates,
+                recentCandidates,
+                alliedParties
             );
         }
     }

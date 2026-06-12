@@ -34,14 +34,24 @@ namespace eVote360_Pro.Application.Interfaces.Services
         string? ActiveElectionName,
         int VoterParticipationCount,
         int TotalCitizens,
-        int TotalParties
+        int TotalParties,
+        List<RecentCitizenDto> RecentCitizens,
+        List<RecentPartyDto> RecentParties
     );
+
+    public record RecentCitizenDto(string FullName, string IdentityDocument, string CreatedAt);
+    public record RecentPartyDto(string Name, string Acronym, string LogoPath);
 
     public record LeaderDashboardStatisticsResponse(
         int ActiveCandidates,
         int InactiveCandidates,
         int ApprovedAlliances,
         int PendingAllianceRequestsReceived,
-        int AssignedCandidates
+        int AssignedCandidates,
+        List<RecentCandidateDto> RecentCandidates,
+        List<AlliedPartyDto> AlliedParties
     );
+
+    public record RecentCandidateDto(string FullName, string PositionName, string PhotoPath);
+    public record AlliedPartyDto(string Name, string Acronym, string LogoPath);
 }

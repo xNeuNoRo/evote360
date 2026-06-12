@@ -59,7 +59,7 @@
     </div>
 
     <!-- Pending Alliance Requests -->
-    <a asp-controller="PoliticalAlliance" asp-action="Received" class="block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover-scale group relative overflow-hidden">
+    <a asp-controller="PoliticalAlliance" asp-action="Index" class="block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover-scale group relative overflow-hidden">
         @if (Model.PendingAllianceRequestsReceived > 0)
         {
             <div class="absolute top-0 right-0 -mr-4 -mt-4 w-16 h-16 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
@@ -97,6 +97,76 @@
         <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
             <i data-lucide="check-circle" class="w-7 h-7"></i>
         </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Últimos Candidatos -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-gray-400"></i>
+                Mis Candidatos Recientes
+            </h3>
+            <a asp-controller="Candidate" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Ver todos</a>
+        </div>
+        @if (Model.RecentCandidates.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var candidate in Model.RecentCandidates)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <img src="@candidate.PhotoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/candidates/default.png'" />
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@candidate.FullName</p>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Registrado por tu partido</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="user-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No hay candidatos registrados</p>
+                <a asp-controller="Candidate" asp-action="Create" class="mt-3 inline-block px-4 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">Registrar Primero</a>
+            </div>
+        }
+    </div>
+
+    <!-- Partidos Aliados -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-gray-400"></i>
+                Mis Partidos Aliados
+            </h3>
+            <a asp-controller="PoliticalAlliance" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Gestionar Alianzas</a>
+        </div>
+        @if (Model.AlliedParties.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var allied in Model.AlliedParties)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <img src="@allied.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/parties/default.png'" />
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@allied.Name</p>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">@allied.Acronym</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="handshake" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No cuentas con alianzas activas</p>
+                <a asp-controller="PoliticalAlliance" asp-action="Create" class="mt-3 inline-block px-4 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">Proponer Alianza</a>
+            </div>
+        }
     </div>
 </div>
 
