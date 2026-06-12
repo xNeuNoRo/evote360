@@ -97,7 +97,7 @@
                 @foreach (var party in Model.RecentParties)
                 {
                     <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
-                        <img src="@party.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/parties/default.png'" />
+                        <img src="@party.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.onerror=null; this.src='/uploads/parties/default.png';" />
                         <div class="flex-1">
                             <p class="text-sm font-black text-gray-900 line-clamp-1">@party.Name</p>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">@party.Acronym</p>
