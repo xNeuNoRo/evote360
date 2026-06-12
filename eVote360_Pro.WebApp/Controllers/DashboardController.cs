@@ -20,11 +20,18 @@ namespace eVote360_Pro.WebApp.Controllers
             if (_currentUserService.Role == SystemRoles.Administrator)
             {
                 var adminStats = await _dashboardService.GetGeneralStatisticsAsync();
+                // Pass current year, or the dashboard service handles the latest
+                var adminReport = await _dashboardService.GetAdminDashboardAsync(DateTime.Now.Year);
+                ViewBag.ReportData = adminReport;
+                
                 return View("AdminDashboard", adminStats);
             }
             else if (_currentUserService.Role == SystemRoles.PoliticalLeader)
             {
                 var leaderStats = await _dashboardService.GetLeaderStatisticsAsync();
+                var leaderReport = await _dashboardService.GetLeaderDashboardAsync();
+                ViewBag.ReportData = leaderReport;
+                
                 return View("LeaderDashboard", leaderStats);
             }
 

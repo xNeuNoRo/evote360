@@ -99,3 +99,65 @@
         </div>
     </div>
 </div>
+
+@{
+    var reportData = ViewBag.ReportData as eVote360_Pro.Application.DTOs.Voting.Responses.ResultReportResponse;
+    var reportJson = reportData != null ? System.Text.Json.JsonSerializer.Serialize(reportData, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }) : "null";
+}
+
+@if (reportData != null && reportData.ResultsByPosition.Any())
+{
+    <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-black text-gray-900 tracking-tight">Vigilancia Electoral: @reportData.ElectionName</h2>
+                <p class="text-sm font-medium text-gray-500">Métricas de desempeño de tus candidatos en el primer nivel electivo.</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="relative h-[300px] w-full">
+                <canvas id="leaderBarChart"></canvas>
+            </div>
+            <div class="relative h-[300px] w-full flex justify-center">
+                <canvas id="leaderPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const report = @Html.Raw(reportJson);
+        if (report && report.resultsByPosition && report.resultsByPosition.length > 0) {
+            const pos = report.resultsByPosition[0]; // Mostrar el primer puesto
+            
+            const labels = pos.candidates.map(c => c.candidateId === null ? "Blanco" : c.candidateName);
+            const dataVotes = pos.candidates.map(c => c.votesCount);
+            
+            const bgColors = [
+                'rgba(16, 185, 129, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(107, 114, 128, 0.8)'
+            ];
+
+            new Chart(document.getElementById('leaderBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: 'Votos', data: dataVotes, backgroundColor: bgColors, borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('leaderPieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: dataVotes, backgroundColor: bgColors, borderWidth: 2 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+    </script>
+}
