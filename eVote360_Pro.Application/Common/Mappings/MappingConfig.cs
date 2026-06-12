@@ -49,17 +49,6 @@ namespace eVote360_Pro.Application.Common.Mappings
                         )
                 );
 
-            // Candidatos
-            TypeAdapterConfig<Candidate, CandidateResponse>
-                .NewConfig()
-                .Map(dest => dest.FullName, src => $"{src.FirstName} {src.LastName}")
-                .Map(dest => dest.PhotoUrl, src => src.PhotoPath)
-                .Map(
-                    dest => dest.OriginalPartyName,
-                    src => src.OriginalParty != null ? src.OriginalParty.Name : "N/A"
-                )
-                .Map(dest => dest.IsImmutable, src => src.Votes.Any());
-
             // Partidos Políticos
             TypeAdapterConfig<PoliticalParty, PoliticalPartyResponse>
                 .NewConfig()

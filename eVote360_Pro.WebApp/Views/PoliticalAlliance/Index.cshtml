@@ -1,0 +1,276 @@
+@using eVote360_Pro.Application.DTOs.PoliticalAlliance.Responses
+@using eVote360_Pro.Domain.Enums
+@{
+    var pendingToRespond = ViewBag.PendingToRespond as List<AllianceResponse> ?? new List<AllianceResponse>();
+    var sentRequests = ViewBag.SentRequests as List<AllianceResponse> ?? new List<AllianceResponse>();
+    var activeAlliances = ViewBag.ActiveAlliances as List<AllianceResponse> ?? new List<AllianceResponse>();
+}
+
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Alianzas Políticas</h1>
+        <p class="text-gray-500 text-sm mt-1 font-medium">Gestiona los acuerdos y coaliciones con otros partidos políticos.</p>
+    </div>
+    <a asp-action="Create" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer">
+        <i data-lucide="handshake" class="w-5 h-5"></i>
+        Crear Solicitud de Alianza
+    </a>
+</div>
+
+<div class="space-y-12">
+    <!-- Solicitudes Pendientes de Responder -->
+    <section>
+        <h2 class="text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
+            <i data-lucide="bell" class="w-5 h-5 text-amber-500"></i>
+            Solicitudes Pendientes de Responder
+            @if (pendingToRespond.Any())
+            {
+                <span class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">@pendingToRespond.Count</span>
+            }
+        </h2>
+        
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 border-b border-gray-100">
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Partido Solicitante</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Fecha de Solicitud</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-center">Estado</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @if (!pendingToRespond.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="py-12 px-6 text-center text-gray-400">
+                                    <i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-200 mb-3"></i>
+                                    <p class="text-sm font-bold text-gray-500">No tienes solicitudes pendientes de respuesta</p>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var request in pendingToRespond)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full border border-gray-100 bg-white overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
+                                            <i data-lucide="flag" class="w-5 h-5 text-gray-400"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-black text-gray-900 tracking-tight">@request.RequesterPartyName</p>
+                                            <p class="text-xs font-medium text-gray-500">Partido Solicitante</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-gray-600 font-medium">
+                                    @request.CreatedAt.ToString("dd/MM/yyyy")
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        En espera de respuesta
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <form asp-action="Accept" method="post" class="inline confirm-form" data-message="¿Está seguro que desea aceptar la alianza con el partido @request.RequesterPartyName?">
+                                            <input type="hidden" name="id" value="@request.Id" />
+                                            <button type="submit" class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors cursor-pointer" title="Aceptar Solicitud">
+                                                <i data-lucide="check" class="w-5 h-5"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="Reject" method="post" class="inline confirm-form" data-message="¿Está seguro que desea rechazar la alianza con el partido @request.RequesterPartyName?">
+                                            <input type="hidden" name="id" value="@request.Id" />
+                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Rechazar Solicitud">
+                                                <i data-lucide="x" class="w-5 h-5"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solicitudes Realizadas -->
+    <section>
+        <h2 class="text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
+            <i data-lucide="send" class="w-5 h-5 text-blue-500"></i>
+            Solicitudes Realizadas
+        </h2>
+        
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 border-b border-gray-100">
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Partido Destino</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Fecha de Solicitud</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-center">Estado</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @if (!sentRequests.Any(r => r.Status != AllianceStatus.Accepted.ToString()))
+                        {
+                            <tr>
+                                <td colspan="4" class="py-12 px-6 text-center text-gray-400">
+                                    <i data-lucide="send-horizontal" class="w-12 h-12 mx-auto text-gray-200 mb-3"></i>
+                                    <p class="text-sm font-bold text-gray-500">No tienes solicitudes enviadas activas</p>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var request in sentRequests.Where(r => r.Status != AllianceStatus.Accepted.ToString()))
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full border border-gray-100 bg-white overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
+                                            <i data-lucide="flag" class="w-5 h-5 text-gray-400"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-black text-gray-900 tracking-tight">@request.ReceiverPartyName</p>
+                                            <p class="text-xs font-medium text-gray-500">Partido Receptor</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-gray-600 font-medium">
+                                    @request.CreatedAt.ToString("dd/MM/yyyy")
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    @if (request.Status == AllianceStatus.Pending.ToString())
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            En espera de respuesta
+                                        </span>
+                                    }
+                                    else if (request.Status == AllianceStatus.Rejected.ToString())
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200/60">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                            Rechazada
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la solicitud enviada a @request.ReceiverPartyName?">
+                                            <input type="hidden" name="id" value="@request.Id" />
+                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Eliminar Solicitud">
+                                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alianzas Vigentes -->
+    <section>
+        <h2 class="text-lg font-black text-gray-900 flex items-center gap-2 mb-4">
+            <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+            Alianzas Vigentes
+            @if (activeAlliances.Any())
+            {
+                <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">@activeAlliances.Count</span>
+            }
+        </h2>
+        
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 border-b border-gray-100">
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Partido Aliado</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Fecha de Aceptación</th>
+                            <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @if (!activeAlliances.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="py-12 px-6 text-center text-gray-400">
+                                    <i data-lucide="shield" class="w-12 h-12 mx-auto text-gray-200 mb-3"></i>
+                                    <p class="text-sm font-bold text-gray-500">No tienes alianzas políticas vigentes</p>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var alliance in activeAlliances)
+                        {
+                            var myPartyId = (int)ViewBag.MyPartyId;
+                            string alliedPartyName = alliance.RequesterPartyId == myPartyId ? alliance.ReceiverPartyName : alliance.RequesterPartyName;
+
+                            <tr class="hover:bg-gray-50/50 transition-colors group">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full border border-gray-100 bg-emerald-50 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
+                                            <i data-lucide="handshake" class="w-5 h-5 text-emerald-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-black text-gray-900 tracking-tight">@alliedPartyName</p>
+                                            <p class="text-xs font-medium text-gray-500">Alianza Activa</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-gray-600 font-medium">
+                                    @(alliance.AcceptedAt?.ToString("dd/MM/yyyy") ?? alliance.CreatedAt.ToString("dd/MM/yyyy"))
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la alianza política con el partido @alliedPartyName?">
+                                            <input type="hidden" name="id" value="@alliance.Id" />
+                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Romper Alianza">
+                                                <i data-lucide="link-2-off" class="w-5 h-5"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.confirm-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-message');
+                Swal.fire({
+                    title: 'Confirmación',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Aceptar',
+                    cancelButtonText: 'Cancelar',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 mx-2 cursor-pointer',
+                        cancelButton: 'px-5 py-2 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 mx-2 cursor-pointer',
+                        popup: 'rounded-3xl shadow-xl border border-gray-100'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        });
+    </script>
+}

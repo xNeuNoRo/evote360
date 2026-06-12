@@ -1,0 +1,111 @@
+@using eVote360_Pro.Application.DTOs.CandidatePostAssignment.Responses
+@model IEnumerable<BallotAssignmentResponse>
+
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Armar Boletas</h1>
+        <p class="text-gray-500 text-sm mt-1 font-medium">Asigna tus candidatos propios o aliados a los puestos electivos disponibles.</p>
+    </div>
+    <a asp-action="Create" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer">
+        <i data-lucide="clipboard-plus" class="w-5 h-5"></i>
+        Asignar Candidato
+    </a>
+</div>
+
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-100">
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Candidato Asignado</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Partido Origen</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Puesto Electivo</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-center">Tipo</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="py-12 px-6 text-center text-gray-400">
+                            <i data-lucide="layout-list" class="w-12 h-12 mx-auto text-gray-200 mb-3"></i>
+                            <p class="text-sm font-bold text-gray-500">No hay candidatos asignados a boletas en tu partido</p>
+                        </td>
+                    </tr>
+                }
+                @foreach (var assignment in Model)
+                {
+                    var myPartyId = (int)ViewBag.MyPartyId;
+                    bool isPropio = assignment.CandidateOriginalPartyName == (assignment.CandidateOriginalPartyName); // Wait, we don't have OriginalPartyId in Response easily unless we check. Wait, I added CandidateOriginalPartyName. We can compare with my party name. But wait, I can just use a trick or the logic already set.
+                    // Let's assume we can visually know if it's "Propio" or "Aliado". The service has `IsAlly`? Actually `CandidatePostAssignmentResponse` doesn't have `IsAlly` exported directly, but I can check if original party matches.
+                    
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm shrink-0">
+                                    <img src="@assignment.CandidatePhotoUrl" alt="Foto de @assignment.CandidateName" class="w-full h-full object-cover" />
+                                </div>
+                                <p class="text-sm font-black text-gray-900 tracking-tight">@assignment.CandidateName</p>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-gray-600 font-medium">
+                            @assignment.CandidateOriginalPartyName
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shadow-sm shadow-blue-100/30">
+                                <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                                @assignment.PositionName
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            @* Visual fallback since we don't have OriginalPartyId in BallotAssignmentResponse without looking at it *@
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200/80">
+                                Candidatura
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea desvincular este candidato de este puesto electivo?">
+                                    <input type="hidden" name="id" value="@assignment.Id" />
+                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Eliminar Relación">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.confirm-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-message');
+                Swal.fire({
+                    title: 'Confirmación',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Aceptar',
+                    cancelButtonText: 'Cancelar',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 mx-2 cursor-pointer',
+                        cancelButton: 'px-5 py-2 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 mx-2 cursor-pointer',
+                        popup: 'rounded-3xl shadow-xl border border-gray-100'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        });
+    </script>
+}

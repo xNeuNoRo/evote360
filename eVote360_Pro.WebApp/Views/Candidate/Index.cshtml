@@ -1,0 +1,97 @@
+@using eVote360_Pro.Application.DTOs.Candidate.Responses
+@model IEnumerable<CandidateResponse>
+
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight ">Mis Candidatos</h1>
+        <p class="text-gray-500 text-sm mt-1 font-medium ">Gestiona los candidatos que representarán a tu partido en las elecciones.</p>
+    </div>
+    <a asp-action="Create" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer ">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+        Nuevo Candidato
+    </a>
+</div>
+
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden  ">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-100  ">
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider ">Candidato</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider ">Partido</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-center ">Estado</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right ">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 ">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="py-12 px-6 text-center text-gray-400">
+                            <i data-lucide="users-round" class="w-12 h-12 mx-auto text-gray-200 mb-3 "></i>
+                            <p class="text-sm font-bold text-gray-500 ">No hay candidatos registrados en tu partido</p>
+                        </td>
+                    </tr>
+                }
+                @foreach (var candidate in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors group :bg-slate-700/30">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm shrink-0  ">
+                                    <img src="@candidate.PhotoPath" alt="Foto de @candidate.FullName" class="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-gray-900 tracking-tight ">@candidate.FullName</p>
+                                    @if (candidate.VotesCount > 0)
+                                    {
+                                        <p class="text-[10px] text-amber-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                            <i data-lucide="lock" class="w-3 h-3"></i>
+                                            Bloqueado (En Elección)
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-2">
+                                <img src="@candidate.OriginalPartyLogoPath" alt="Logo de @candidate.OriginalPartyName" class="w-6 h-6 rounded-full object-cover border border-gray-100 " />
+                                <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded-lg  ">@candidate.OriginalPartyAcronym</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            @if (candidate.IsActive)
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200/60   ">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                    Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200/60   ">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                    Inactivo
+                                </span>
+                            }
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a asp-action="Edit" asp-route-id="@candidate.Id" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer :bg-blue-900/30">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </a>
+                                <form asp-action="ToggleStatus" method="post" class="inline">
+                                    <input type="hidden" name="id" value="@candidate.Id" />
+                                    <input type="hidden" name="activate" value="@(candidate.IsActive ? "false" : "true")" />
+                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer :bg-red-900/30" title="@(candidate.IsActive ? "Inactivar" : "Activar")">
+                                        <i data-lucide="@(candidate.IsActive ? "power-off" : "power")" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
