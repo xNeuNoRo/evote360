@@ -1,0 +1,264 @@
+@using eVote360_Pro.Application.DTOs.Voting.Responses
+@model VoterBallotResponse
+@{
+    Layout = "_VoterLayout";
+    ViewData["Title"] = "Cabina de Votación";
+    
+    // Convert Model to JSON for JS handling
+    var ballotJson = System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+}
+
+<div class="max-w-4xl mx-auto page-entry">
+    <div class="mb-8 border-b border-gray-100 pb-6 flex items-end justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900 tracking-tight">@Model.ElectionName</h1>
+            <p class="text-gray-500 font-medium mt-1">Selecciona tu candidato de preferencia para cada nivel electivo.</p>
+        </div>
+        <div class="text-right">
+            <span class="text-xs font-black text-gray-400 uppercase tracking-widest block mb-1">Nivel</span>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-sm">
+                <span id="currentStepIndicator">1</span> / <span id="totalStepsIndicator">@Model.Positions.Count</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Dinámico -->
+    <div id="ballotContainer" class="relative min-h-[400px]">
+        <!-- JS inyectará aquí los niveles -->
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ballotData = @Html.Raw(ballotJson);
+        const positions = ballotData.positions;
+        let currentStep = 0;
+        let selections = {}; // { positionId: { candidateId: x, partyId: y } }
+
+        const container = document.getElementById('ballotContainer');
+        const stepIndicator = document.getElementById('currentStepIndicator');
+
+        function renderStep(stepIndex) {
+            if (stepIndex >= positions.length) {
+                renderReview();
+                return;
+            }
+
+            const position = positions[stepIndex];
+            stepIndicator.textContent = stepIndex + 1;
+
+            let html = `
+                <div class="animate__animated animate__fadeInRight animate__faster">
+                    <div class="mb-6 text-center">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">${position.positionName}</h2>
+                        <p class="text-gray-500 mt-2 font-medium">${position.description || 'Seleccione una opción'}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            `;
+
+            // Candidate Cards
+            position.options.forEach((opt, idx) => {
+                const isNone = opt.candidateId === null;
+                
+                if (isNone) {
+                    html += `
+                        <div onclick="selectCandidate(${position.positionId}, null, null)" 
+                             class="hover-scale cursor-pointer bg-white border-2 border-gray-100 hover:border-gray-300 rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[220px]">
+                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                                <i data-lucide="ban" class="w-8 h-8"></i>
+                            </div>
+                            <h3 class="text-lg font-black text-gray-900">Ninguno</h3>
+                            <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wider">Voto en blanco</p>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div onclick="selectCandidate(${position.positionId}, ${opt.candidateId}, ${opt.partyId})" 
+                             class="hover-scale cursor-pointer bg-white border-2 border-gray-100 hover:border-blue-500 rounded-3xl p-6 relative overflow-hidden shadow-sm flex flex-col items-center text-center min-h-[220px]">
+                            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 transition-opacity"></div>
+                            
+                            <img src="${opt.photoUrl}" onerror="this.src='/uploads/candidates/default.png'" alt="${opt.candidateName}" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md mb-4 bg-gray-50" />
+                            
+                            <h3 class="text-lg font-black text-gray-900 leading-tight mb-1">${opt.candidateName}</h3>
+                            
+                            <div class="flex items-center gap-2 mt-auto pt-4">
+                                ${opt.partyLogoUrl ? `<img src="${opt.partyLogoUrl}" class="w-5 h-5 rounded-full border border-gray-200" />` : ''}
+                                <span class="text-xs font-black text-gray-500 uppercase tracking-wider">${opt.partyAcronym}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            html += `
+                    </div>
+                    
+                    ${stepIndex > 0 ? `
+                        <div class="mt-10 flex justify-center">
+                            <button type="button" onclick="goBack()" class="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al nivel anterior
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        window.selectCandidate = function(positionId, candidateId, partyId) {
+            selections[positionId] = {
+                positionId: positionId,
+                candidateId: candidateId,
+                partyId: partyId
+            };
+            
+            // Wait a tiny bit for the click effect
+            setTimeout(() => {
+                currentStep++;
+                renderStep(currentStep);
+            }, 150);
+        }
+
+        window.goBack = function() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        }
+
+        function renderReview() {
+            stepIndicator.textContent = "✓";
+            let html = `
+                <div class="animate__animated animate__fadeInUp animate__faster max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="clipboard-check" class="w-8 h-8"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">Confirmación de Voto</h2>
+                        <p class="text-gray-500 mt-2 font-medium">Revisa tus selecciones antes de emitir el voto definitivo. Esta acción es irreversible.</p>
+                    </div>
+
+                    <div class="space-y-4 mb-8">
+            `;
+
+            positions.forEach(pos => {
+                const sel = selections[pos.positionId];
+                const opt = pos.options.find(o => o.candidateId === sel.candidateId);
+                
+                const nameText = opt.candidateId === null ? "Ninguno (Voto en blanco)" : opt.candidateName;
+                const partyText = opt.candidateId === null ? "-" : opt.partyName;
+
+                html += `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">${pos.positionName}</p>
+                            <p class="text-sm font-black text-gray-900">${nameText}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-gray-500">${partyText}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button type="button" onclick="resetVoting()" class="flex-1 py-4 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors cursor-pointer">
+                            Volver a Empezar
+                        </button>
+                        <button type="button" onclick="submitVote()" class="flex-1 flex justify-center items-center gap-2 py-4 text-base font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 rounded-2xl transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+                            Confirmar y Emitir Voto
+                            <i data-lucide="check" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        window.resetVoting = function() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esto borrará todas tus selecciones actuales.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, reiniciar',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'px-5 py-2 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 mx-2',
+                    cancelButton: 'px-5 py-2 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 mx-2',
+                    popup: 'rounded-3xl border border-gray-100 shadow-xl'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    selections = {};
+                    currentStep = 0;
+                    renderStep(0);
+                }
+            });
+        }
+
+        window.submitVote = function() {
+            const payload = {
+                electionId: ballotData.electionId,
+                selections: Object.values(selections).map(s => ({
+                    positionId: s.positionId,
+                    candidateId: s.candidateId,
+                    partyId: s.partyId
+                }))
+            };
+
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Enviando voto cifrado',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch('/Voting/SubmitVote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Ocurrió un error al registrar el voto.',
+                        customClass: { popup: 'rounded-3xl' }
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo contactar con el servidor.',
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            });
+        }
+
+        // Init first step
+        if (positions && positions.length > 0) {
+            renderStep(0);
+        } else {
+            container.innerHTML = '<div class="text-center py-20 text-gray-500 font-bold">No hay puestos configurados en esta boleta.</div>';
+        }
+    </script>
+}

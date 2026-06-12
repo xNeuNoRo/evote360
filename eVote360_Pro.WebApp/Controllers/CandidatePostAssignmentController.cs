@@ -4,7 +4,6 @@ using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.WebApp.Filters;
-using eVote360_Pro.Application.DTOs.Candidate.Responses;
 
 namespace eVote360_Pro.WebApp.Controllers
 {

@@ -18,27 +18,15 @@
 
     <div class="bg-white/80 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2rem] p-8 sm:p-12 relative z-20">
         
-        <form id="voterForm" class="space-y-6 text-center">
-            
-            <div class="max-w-md mx-auto">
-                <label for="Cedula" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 transition-colors">Número de Cédula</label>
-                <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 transition-colors group-focus-within:text-blue-600">
-                        <i data-lucide="credit-card" class="w-6 h-6"></i>
-                    </div>
-                    <input id="Cedula" name="Cedula" type="text" placeholder="000-0000000-0" 
-                           class="block w-full pl-14 pr-4 py-4 text-center bg-gray-50 border border-gray-200 rounded-2xl text-xl tracking-widest font-black text-gray-900 placeholder-gray-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none hover:border-gray-300" autocomplete="off" />
-                </div>
-            </div>
-
+        <div class="space-y-6 text-center">
+            <p class="text-gray-500 font-medium">El proceso de autenticación biométrica está listo. Haz clic en el botón de abajo para comenzar.</p>
             <div class="pt-4 max-w-xs mx-auto">
-                <button type="button" onclick="Swal.fire('Proximamente', 'La votación pública será implementada en la Fase 5.', 'info')"
-                        class="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl text-base font-black text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
-                    Validar Identidad
-                </button>
+                <a href="/Voting"
+                   class="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl text-base font-black text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+                    Entrar a la Cabina
+                </a>
             </div>
-            
-        </form>
+        </div>
     </div>
 
     <div class="mt-12 text-center relative z-20 flex flex-col items-center gap-4">
