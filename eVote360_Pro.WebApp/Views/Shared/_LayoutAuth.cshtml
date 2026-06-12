@@ -9,8 +9,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
+    <meta name="view-transition" content="same-origin" />
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/transitions.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -49,11 +62,11 @@
 <body class="bg-gray-50 min-h-screen relative overflow-hidden flex items-center justify-center font-sans antialiased">
     
     <!-- Animated Background Blobs -->
-    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-    <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+    <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-red-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
 
-    <main class="w-full max-w-md mx-auto p-6 relative z-10 page-entry">
+    <main style="view-transition-name: main-content;" class="w-full h-full relative z-10 page-entry">
         @RenderBody()
     </main>
 
@@ -83,10 +96,12 @@
             document.addEventListener('DOMContentLoaded', function() {
                 var alertMessage = '@Html.Raw(TempData["ErrorMessage"]?.ToString()?.Replace("'", "\\'"))';
                 
-                Toast.fire({
-                    icon: 'error',
-                    title: alertMessage
-                });
+                setTimeout(() => {
+                    Toast.fire({
+                        icon: 'error',
+                        title: alertMessage
+                    });
+                }, 500);
             });
             </text>
         }
@@ -98,10 +113,12 @@
                 var alertType = '@TempData["SweetAlertType"]' || 'success';
                 var alertMessage = '@Html.Raw(TempData["SweetAlertMessage"]?.ToString()?.Replace("'", "\\'"))';
                 
-                Toast.fire({
-                    icon: alertType,
-                    title: alertMessage
-                });
+                setTimeout(() => {
+                    Toast.fire({
+                        icon: alertType,
+                        title: alertMessage
+                    });
+                }, 500);
             });
             </text>
         }

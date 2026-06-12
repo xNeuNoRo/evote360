@@ -86,6 +86,7 @@ namespace eVote360_Pro.WebApp.Middlewares
             {
                 var tempData = tempDataFactory.GetTempData(context);
                 tempData["ErrorMessage"] = message;
+                tempData.Save();
 
                 var referer = context.Request.Headers["Referer"].ToString();
 

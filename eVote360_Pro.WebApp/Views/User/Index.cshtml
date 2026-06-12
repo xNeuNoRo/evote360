@@ -1,0 +1,141 @@
+@model IEnumerable<eVote360_Pro.Application.DTOs.User.Responses.UserResponse>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Seguridad", null, null),
+        ("Usuarios", null, null)
+    };
+}
+
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-6 h-6 text-blue-600"></i>
+            Usuarios y Roles
+        </h1>
+        <p class="text-sm text-gray-500 mt-1 font-medium">Gestiona el acceso al sistema y asigna dirigentes políticos.</p>
+    </div>
+    <a asp-action="Create" style="view-transition-name: card-user;" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+        <i data-lucide="user-plus" class="w-4 h-4"></i>
+        Nuevo Usuario
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+            <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100 font-black tracking-wider">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Usuario</th>
+                    <th scope="col" class="px-6 py-4">Rol en el Sistema</th>
+                    <th scope="col" class="px-6 py-4">Partido Asignado</th>
+                    <th scope="col" class="px-6 py-4 text-center">Estado</th>
+                    <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                                <i data-lucide="shield-alert" class="w-8 h-8 text-gray-300"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-900 mb-1">No hay usuarios</h3>
+                            <p class="text-xs text-gray-500">Comienza registrando un usuario en el sistema.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-blue-50/30 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-black shrink-0">
+                                        @item.FirstName.FirstOrDefault()@item.LastName.FirstOrDefault()
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-900">@item.FullName</div>
+                                        <div class="text-xs font-black text-gray-500 mt-0.5 tracking-wider">@@@item.Username • @item.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold @(item.RoleName == "Administrador" ? "bg-purple-50 text-purple-700 border border-purple-100" : "bg-orange-50 text-orange-700 border border-orange-100")">
+                                    <i data-lucide="@(item.RoleName == "Administrador" ? "shield" : "briefcase")" class="w-3.5 h-3.5"></i>
+                                    @item.RoleName
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (item.RoleName == "Dirigente político")
+                                {
+                                    if (item.AssignedPartyId.HasValue)
+                                    {
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+                                                @item.AssignedPartyName
+                                            </span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-yellow-50 text-yellow-700 border border-yellow-100 uppercase">
+                                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                                            Sin Partido
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-xs text-gray-400 font-medium italic">No aplica</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if (item.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-600 uppercase tracking-wider border border-emerald-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-600 uppercase tracking-wider border border-red-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                        Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    
+                                    @if (item.RoleName == "Dirigente político")
+                                    {
+                                        <a asp-action="AssignParty" asp-route-userId="@item.Id" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="@(item.AssignedPartyId.HasValue ? "Cambiar Partido" : "Asignar Partido")">
+                                            <i data-lucide="link" class="w-4 h-4"></i>
+                                        </a>
+                                    }
+
+                                    <a asp-action="Edit" asp-route-id="@item.Id" style="view-transition-name: card-user-@item.Id;" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="Editar">
+                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                    </a>
+                                    <form asp-action="ToggleStatus" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="activate" value="@(item.IsActive ? "false" : "true")" />
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-@(item.IsActive ? "red" : "emerald")-600 hover:bg-@(item.IsActive ? "red" : "emerald")-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="@(item.IsActive ? "Desactivar" : "Activar")">
+                                            <i data-lucide="@(item.IsActive ? "power-off" : "power")" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

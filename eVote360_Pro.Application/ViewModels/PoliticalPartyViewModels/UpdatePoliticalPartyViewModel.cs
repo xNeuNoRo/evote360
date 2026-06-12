@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace eVote360_Pro.Application.ViewModels.PoliticalPartyViewModels
 {
@@ -24,6 +24,8 @@ namespace eVote360_Pro.Application.ViewModels.PoliticalPartyViewModels
 
         [Display(Name = "Nuevo Logo (opcional)")]
         public IFormFile? LogoFile { get; set; }
+
+        public string? CurrentLogoUrl { get; set; }
 
         [Display(Name = "Estado Activo")]
         public bool IsActive { get; set; }

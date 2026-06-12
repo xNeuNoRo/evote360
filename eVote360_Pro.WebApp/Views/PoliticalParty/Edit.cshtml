@@ -1,0 +1,146 @@
+@model eVote360_Pro.Application.ViewModels.PoliticalPartyViewModels.UpdatePoliticalPartyViewModel
+@{
+    ViewData["Title"] = "Editar Partido";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", null, null),
+        ("Partidos Políticos", "Index", "PoliticalParty"),
+        ("Editar", null, null)
+    };
+}
+
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-6 h-6 text-blue-600"></i>
+                Editar Partido Político
+            </h1>
+            <p class="text-sm text-gray-500 mt-1 font-medium">Actualiza los datos o el logo de @Model.Name.</p>
+        </div>
+    </div>
+
+    <div style="view-transition-name: card-party-@Model.Id;" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-6">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="IsActive" />
+            <input type="hidden" asp-for="CurrentLogoUrl" />
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="Name" class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Nombre del Partido <span class="text-red-500">*</span></label>
+                    <input asp-for="Name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-bold text-gray-900" />
+                    <span asp-validation-for="Name" class="text-xs font-bold text-red-500 mt-1 block"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Acronym" class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Siglas <span class="text-red-500">*</span></label>
+                    <input asp-for="Acronym" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-black text-gray-900 uppercase" />
+                    <span asp-validation-for="Acronym" class="text-xs font-bold text-red-500 mt-1 block"></span>
+                </div>
+            </div>
+
+            <div>
+                <label asp-for="Description" class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Descripción</label>
+                <textarea asp-for="Description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-medium text-gray-900 resize-none"></textarea>
+                <span asp-validation-for="Description" class="text-xs font-bold text-red-500 mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="LogoFile" class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Logo Oficial</label>
+                
+                <label id="dropZone" for="LogoFile" class="relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-blue-50/50 hover:border-blue-400 transition-all group overflow-hidden">
+                    
+                    <!-- Placeholder -->
+                    <div id="uploadPlaceholder" class="flex flex-col items-center justify-center pt-5 pb-6 transition-opacity duration-300 z-10 @(!string.IsNullOrEmpty(Model.CurrentLogoUrl) ? "hidden" : "")">
+                        <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-400 mb-3 group-hover:text-blue-500 transition-colors transform group-hover:-translate-y-1"></i>
+                        <p class="mb-1 text-sm text-gray-500 font-medium group-hover:text-blue-600"><span class="font-black">Haz clic para subir</span> o arrastra un nuevo logo</p>
+                        <p class="text-xs text-gray-400">PNG, JPG (MAX. 2MB)</p>
+                    </div>
+
+                    <!-- Preview Image -->
+                    <img id="imagePreview" src="@(!string.IsNullOrEmpty(Model.CurrentLogoUrl) ? (Model.CurrentLogoUrl.StartsWith("/") ? Model.CurrentLogoUrl : "/" + Model.CurrentLogoUrl) : "#")" alt="Vista previa" class="absolute inset-0 w-full h-full object-contain p-4 z-0 transition-opacity duration-300 @(!string.IsNullOrEmpty(Model.CurrentLogoUrl) ? "" : "hidden")" />
+                    
+                    <!-- Hover Overlay for changes -->
+                    <div id="hoverOverlay" class="absolute inset-0 bg-blue-900/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm @(!string.IsNullOrEmpty(Model.CurrentLogoUrl) ? "" : "hidden")">
+                        <i data-lucide="refresh-cw" class="w-8 h-8 text-white mb-2"></i>
+                        <span class="text-sm font-bold text-white">Cambiar Imagen</span>
+                    </div>
+
+                    <input asp-for="LogoFile" type="file" class="hidden" accept="image/png, image/jpeg, image/jpg" onchange="previewImage(this)" />
+                </label>
+                
+                <div id="fileNameDisplay" class="mt-3 text-xs font-bold text-emerald-600 hidden flex items-center gap-1.5 justify-center">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> <span id="fileNameText"></span>
+                </div>
+                <span asp-validation-for="LogoFile" class="text-xs font-bold text-red-500 mt-2 block text-center"></span>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+                <a asp-action="Index" class="px-5 py-2.5 text-sm font-bold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('LogoFile');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('border-blue-500', 'bg-blue-50'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-blue-500', 'bg-blue-50'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            previewImage(fileInput);
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const overlay = document.getElementById('hoverOverlay');
+            const display = document.getElementById('fileNameDisplay');
+            const text = document.getElementById('fileNameText');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    overlay.classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+                
+                text.textContent = input.files[0].name;
+                display.classList.remove('hidden');
+            }
+        }
+    </script>
+}

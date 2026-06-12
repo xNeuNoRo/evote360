@@ -22,6 +22,11 @@ namespace eVote360_Pro.Application.Interfaces.Services
         /// Obtiene un resumen del estado de la elección activa para el Home del Dirigente.
         /// </summary>
         Task<ResultReportResponse?> GetLeaderDashboardAsync();
+
+        /// <summary>
+        /// Obtiene las estadísticas para el dashboard del Dirigente (Candidatos, Alianzas, etc.).
+        /// </summary>
+        Task<LeaderDashboardStatisticsResponse> GetLeaderStatisticsAsync();
     }
 
     public record DashboardStatisticsResponse(
@@ -30,5 +35,13 @@ namespace eVote360_Pro.Application.Interfaces.Services
         int VoterParticipationCount,
         int TotalCitizens,
         int TotalParties
+    );
+
+    public record LeaderDashboardStatisticsResponse(
+        int ActiveCandidates,
+        int InactiveCandidates,
+        int ApprovedAlliances,
+        int PendingAllianceRequestsReceived,
+        int AssignedCandidates
     );
 }

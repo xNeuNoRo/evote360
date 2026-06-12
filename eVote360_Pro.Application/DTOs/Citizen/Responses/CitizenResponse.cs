@@ -6,6 +6,8 @@ namespace eVote360_Pro.Application.DTOs.Citizen.Responses
     public record CitizenResponse(
         int Id,
         string IdentityDocument,
+        string FirstName,
+        string LastName,
         string FullName,
         string Email,
         bool IsActive,

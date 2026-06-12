@@ -22,7 +22,7 @@ namespace eVote360_Pro.WebApp.Controllers
             // Si el usuario ya está autenticado, no tiene sentido que vea el login
             if (_currentUserService.IsAuthenticated)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
             }
             return View(new LoginViewModel());
         }
@@ -47,7 +47,7 @@ namespace eVote360_Pro.WebApp.Controllers
             HttpContext.Session.SetString("User", JsonSerializer.Serialize(authResponse));
 
             ShowAlert($"Bienvenido de vuelta, {authResponse.FullName}", "success");
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         [HttpGet]
@@ -56,6 +56,12 @@ namespace eVote360_Pro.WebApp.Controllers
             HttpContext.Session.Remove("User");
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Auth");
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }
