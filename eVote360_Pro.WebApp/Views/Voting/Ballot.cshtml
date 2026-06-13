@@ -412,7 +412,10 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     currentStep = 0;
-                    renderStep(0);
+                    // Wait for the SweetAlert closing animation to finish before view transition
+                    setTimeout(() => {
+                        renderStep(0);
+                    }, 350);
                 }
             });
         }
