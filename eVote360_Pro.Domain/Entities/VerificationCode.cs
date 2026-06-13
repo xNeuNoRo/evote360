@@ -77,5 +77,14 @@ namespace eVote360_Pro.Domain.Entities
 
             IsUsed = true;
         }
+
+        /// <summary>
+        /// Invalida el código forzosamente sin validaciones de tiempo.
+        /// Útil para descartar códigos previos cuando se genera uno nuevo.
+        /// </summary>
+        public void Invalidate()
+        {
+            IsUsed = true;
+        }
     }
 }

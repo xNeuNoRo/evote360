@@ -120,7 +120,7 @@ namespace eVote360_Pro.Application.Services
             if (!ocrResult.IsSuccess || !ocrResult.IsDocumentValid)
                 throw new ValidationBusinessException(
                     nameof(request.IdCardImage),
-                    "No fue posible validar el documento en la imagen.",
+                    ocrResult.ErrorMessage ?? "No fue posible validar el documento en la imagen.",
                     "Voting.OcrInvalid"
                 );
 
@@ -322,7 +322,7 @@ namespace eVote360_Pro.Application.Services
                 var confirmationModel = new VoteConfirmationModel(
                     $"{citizen.FirstName} {citizen.LastName}",
                     election.Name,
-                    participation.Id.ToString().ToUpper().Substring(0, 8),
+                    participation.Id.ToString("D8"),
                     _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm")
                 );
 

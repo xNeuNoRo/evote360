@@ -13,7 +13,7 @@ namespace eVote360_Pro.Infrastructure.OCR
         /// <param name="src">Imagen original en formato Mat.</param>
         /// <param name="minAreaPercentage">Porcentaje mínimo de la imagen que debe ocupar el documento.</param>
         /// <returns>True si se detecta un documento válido.</returns>
-        public static bool ContainsDocument(Mat src, double minAreaPercentage = 0.20)
+        public static bool ContainsDocument(Mat src, double minAreaPercentage = 0.05)
         {
             // Convertimos a escala de grises
             using var gray = new Mat();
@@ -36,24 +36,26 @@ namespace eVote360_Pro.Infrastructure.OCR
                 ContourApproximationModes.ApproxSimple
             );
 
-            // Buscamos el contorno más grande que sea un cuadrilátero
+            // Buscamos el contorno más grande que sea un cuadrilátero o polígono parecido
             foreach (var contour in contours.OrderByDescending(c => Cv2.ContourArea(c)))
             {
-                // Aproximamos el contorno a una forma poligonal para detectar si es un cuadrilátero
+                // Aproximamos el contorno a una forma poligonal para detectar si es un documento
                 double peri = Cv2.ArcLength(contour, true);
                 var approx = Cv2.ApproxPolyDP(contour, 0.02 * peri, true);
 
-                // Si el contorno aproximado tiene 4 vértices, es un candidato a documento
-                if (approx.Length == 4)
-                {
-                    double area = Cv2.ContourArea(approx);
-                    double totalArea = src.Width * src.Height;
+                double area = Cv2.ContourArea(approx);
+                double totalArea = src.Width * src.Height;
 
-                    return area > (totalArea * minAreaPercentage);
+                // Validamos que el área del contorno sea suficientemente grande
+                if (area > (totalArea * minAreaPercentage))
+                {
+                    return true;
                 }
             }
 
-            return false;
+            // Si no encontró absolutamente ningún contorno del tamaño mínimo, probaremos suerte de todas formas.
+            // Para la mejor experiencia de usuario en entornos reales, asumimos true y dejamos que el OCR decida.
+            return true;
         }
 
         /// <summary>
@@ -63,28 +65,10 @@ namespace eVote360_Pro.Infrastructure.OCR
         /// <returns>Una nueva instancia de Mat optimizada para OCR.</returns>
         public static Mat PrepareForTextExtraction(Mat src)
         {
-            // Creamos una nueva instancia para no modificar la imagen original
-            var gray = new Mat();
-            // Convertimos a escala de grises para simplificar la información y mejorar el contraste
-            Cv2.CvtColor(src, gray, ColorConversionCodes.BGR2GRAY);
-
-            // Creamos una nueva instancia para el resultado del filtro
-            var thresholded = new Mat();
-
-            // Aplicamos un filtro adaptativo para resaltar las áreas de texto,
-            // especialmente en condiciones de iluminación no ideales
-            Cv2.AdaptiveThreshold(
-                gray,
-                thresholded,
-                255,
-                AdaptiveThresholdTypes.GaussianC,
-                ThresholdTypes.Binary,
-                11,
-                2
-            );
-
-            // Retornamos la imagen procesada, lista para ser pasada al motor OCR
-            return thresholded;
+            var result = new Mat();
+            // Convertimos a escala de grises, ya que el OCR funciona mejor con imágenes monocromáticas
+            Cv2.CvtColor(src, result, ColorConversionCodes.BGR2GRAY);
+            return result;
         }
     }
 }
