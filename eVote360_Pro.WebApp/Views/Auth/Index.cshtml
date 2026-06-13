@@ -86,16 +86,16 @@
             </div>
 
             <div class="flex items-center justify-between pt-2">
-                <div class="flex items-center group/checkbox">
-                    <div class="relative flex items-center justify-center w-5 h-5 bg-gray-100 border border-gray-200 rounded-md cursor-pointer transition-colors group-hover/checkbox:border-blue-400">
-                        <input id="remember-me" name="remember-me" type="checkbox" class="peer absolute w-full h-full opacity-0 cursor-pointer">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity z-10"></i>
-                        <div class="absolute inset-0 bg-blue-600 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                <label class="flex items-center group/checkbox cursor-pointer select-none">
+                    <div class="relative flex items-center justify-center w-5 h-5 bg-gray-100 border border-gray-200 rounded-md transition-colors group-hover/checkbox:border-blue-400">
+                        <input asp-for="RememberMe" type="checkbox" class="peer absolute w-full h-full opacity-0 cursor-pointer">
+                        <i data-lucide="check" class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity z-10 pointer-events-none"></i>
+                        <div class="absolute inset-0 bg-blue-600 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></div>
                     </div>
-                    <label for="remember-me" class="ml-3 block text-sm font-medium text-gray-600 cursor-pointer select-none group-hover/checkbox:text-gray-900 transition-colors">
+                    <span class="ml-3 block text-sm font-medium text-gray-600 group-hover/checkbox:text-gray-900 transition-colors">
                         Mantener sesión iniciada
-                    </label>
-                </div>
+                    </span>
+                </label>
 
                 <a href="#" class="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">
                     ¿Olvidaste tu clave?
