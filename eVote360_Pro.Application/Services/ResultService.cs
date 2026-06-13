@@ -94,12 +94,14 @@ namespace eVote360_Pro.Application.Services
                     }
 
                     string partyName = string.Empty;
+                    string partyAcronym = string.Empty;
                     if (
                         item.PartyId.HasValue
                         && partiesDict.TryGetValue(item.PartyId.Value, out var party)
                     )
                     {
                         partyName = party.Name;
+                        partyAcronym = party.Acronym;
                     }
 
                     candidateResults.Add(
@@ -108,6 +110,7 @@ namespace eVote360_Pro.Application.Services
                             candidateName,
                             item.PartyId,
                             partyName,
+                            partyAcronym,
                             photoUrl,
                             item.VoteCount,
                             Math.Round(percentage, 2)
