@@ -319,11 +319,50 @@ namespace eVote360_Pro.Application.Services
 
                 await _unitOfWork.CommitAsync();
 
+                var selectionModels = new List<VoteSelectionModel>();
+                foreach (var selection in request.Selections)
+                {
+                    var position = await _positionRepository.GetByIdAsync(selection.PositionId);
+                    if (position == null) continue;
+
+                    if (selection.CandidateId.HasValue && selection.PartyId.HasValue)
+                    {
+                        var assignment = await _assignmentRepository.GetFirstOrDefaultAsync(
+                            new QueryOptions<CandidatePostAssignment>
+                            {
+                                Filter = a => a.PositionId == selection.PositionId 
+                                           && a.CandidateId == selection.CandidateId 
+                                           && a.PartyId == selection.PartyId,
+                                Includes = [a => a.Candidate, a => a.Party],
+                                IsTracking = false
+                            }
+                        );
+
+                        if (assignment != null)
+                        {
+                            selectionModels.Add(new VoteSelectionModel(
+                                position.Name,
+                                $"{assignment.Candidate.FirstName} {assignment.Candidate.LastName}",
+                                assignment.Party.Name
+                            ));
+                        }
+                    }
+                    else
+                    {
+                        selectionModels.Add(new VoteSelectionModel(
+                            position.Name,
+                            "Ninguno",
+                            "No aplica"
+                        ));
+                    }
+                }
+
                 var confirmationModel = new VoteConfirmationModel(
                     $"{citizen.FirstName} {citizen.LastName}",
                     election.Name,
                     participation.Id.ToString("D8"),
-                    _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm")
+                    _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm"),
+                    selectionModels
                 );
 
                 await _emailService.SendEmailAsync(

@@ -47,6 +47,24 @@
                     <span class="data-label">Fecha y Hora</span>
                     <span>@Model.Date</span>
                 </div>
+
+                <div style="margin-top: 20px; border-top: 1px dashed #334155; padding-top: 20px;">
+                    <span class="data-label" style="display: block; margin-bottom: 15px; font-size: 12px;">Resumen de selección:</span>
+                    @if (Model.Selections != null && Model.Selections.Any())
+                    {
+                        foreach (var selection in Model.Selections)
+                        {
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155;">
+                                <div style="font-size: 10px; color: #94A3B8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">Puesto: @selection.Position</div>
+                                <div style="font-size: 15px; font-weight: 700; color: #ffffff;">Selección: @selection.Selection</div>
+                                @if (selection.Selection != "Ninguno")
+                                {
+                                    <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Partido: @selection.Party</div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
                 <div style="margin-top: 25px; text-align: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
                     <span class="data-label">Código Único de Registro</span>
                     <span class="id-badge"># @Model.ParticipationCode</span>
@@ -54,7 +72,7 @@
             </div>
             
             <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 25px; line-height: 1.5;">
-                * Este documento es un comprobante de que ejerciste tu derecho. El sistema nunca guarda por quién votaste; tu elección es anónima e irreversible.
+                * Este documento es un comprobante de que ejerciste tu derecho. El voto es confidencial y ha sido desvinculado de tu identidad en la urna digital para garantizar tu anonimato.
             </p>
         </div>
         <div class="footer">

@@ -20,10 +20,13 @@ namespace eVote360_Pro.Application.Models.Emails
     public record AllianceResponseModel(string ReceiverPartyName, string Status, string Message)
         : IEmailModel;
 
+    public record VoteSelectionModel(string Position, string Selection, string Party);
+
     public record VoteConfirmationModel(
         string CitizenName,
         string ElectionName,
         string ParticipationCode,
-        string Date
+        string Date,
+        List<VoteSelectionModel> Selections
     ) : IEmailModel;
 }
