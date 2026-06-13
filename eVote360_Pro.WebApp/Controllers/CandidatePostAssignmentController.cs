@@ -75,7 +75,7 @@ namespace eVote360_Pro.WebApp.Controllers
                 // isAlly can be derived from frontend or safely overridden if backend does checking.
                 // We trust the frontend checkbox or hidden field, but the service validates it anyway.
 
-                var request = new SaveBallotAssignmentRequest(candidateId, positionId, isAlly);
+                var request = new SaveBallotAssignmentRequest(PositionId: positionId, CandidateId: candidateId, IsAlly: isAlly);
                 await _assignmentService.SaveAssignmentAsync(request);
 
                 ShowAlert("Candidato asignado a la boleta exitosamente.");
