@@ -1,7 +1,13 @@
 @using eVote360_Pro.Application.DTOs.Candidate.Responses
 @model IEnumerable<CandidateResponse>
-
-<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+@{
+    ViewData["Title"] = "Candidatos";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", "Index", "Dashboard"),
+        ("Candidatos", null, null)
+    };
+}
     <div>
         <h1 class="text-3xl font-black text-gray-900 tracking-tight ">Mis Candidatos</h1>
         <p class="text-gray-500 text-sm mt-1 font-medium ">Gestiona los candidatos que representarán a tu partido en las elecciones.</p>

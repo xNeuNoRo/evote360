@@ -1,6 +1,13 @@
 @using eVote360_Pro.Application.DTOs.PoliticalAlliance.Responses
 @using eVote360_Pro.Domain.Enums
 @{
+    ViewData["Title"] = "Alianzas Políticas";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", "Index", "Dashboard"),
+        ("Alianzas", null, null)
+    };
+
     var pendingToRespond = ViewBag.PendingToRespond as List<AllianceResponse> ?? new List<AllianceResponse>();
     var sentRequests = ViewBag.SentRequests as List<AllianceResponse> ?? new List<AllianceResponse>();
     var activeAlliances = ViewBag.ActiveAlliances as List<AllianceResponse> ?? new List<AllianceResponse>();

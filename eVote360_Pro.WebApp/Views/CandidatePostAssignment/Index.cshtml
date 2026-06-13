@@ -1,5 +1,13 @@
 @using eVote360_Pro.Application.DTOs.CandidatePostAssignment.Responses
 @model IEnumerable<BallotAssignmentResponse>
+@{
+    ViewData["Title"] = "Asignación de Candidatos";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Procesos", "Index", "Dashboard"),
+        ("Asignaciones", null, null)
+    };
+}
 
 <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>

@@ -1,7 +1,13 @@
-@model IEnumerable<eVote360_Pro.Application.DTOs.ElectivePosition.Responses.ElectivePositionResponse>
+@using eVote360_Pro.Application.DTOs.ElectivePosition.Responses
+@model IEnumerable<ElectivePositionResponse>
 
 @{
-    ViewData["Title"] = "Puestos Electivos";
+    ViewData["Title"] = "Cargos Electivos";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", "Index", "Dashboard"),
+        ("Cargos Electivos", null, null)
+    };
 }
 
 <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
