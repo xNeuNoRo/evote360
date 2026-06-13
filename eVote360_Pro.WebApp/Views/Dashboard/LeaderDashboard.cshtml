@@ -116,7 +116,7 @@
                 @foreach (var candidate in Model.RecentCandidates)
                 {
                     <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
-                        <img src="@candidate.PhotoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/candidates/default.png'" />
+                        <img src="@candidate.PhotoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.onerror=null; this.src='/uploads/candidates/default.png';" />
                         <div class="flex-1">
                             <p class="text-sm font-black text-gray-900 line-clamp-1">@candidate.FullName</p>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Registrado por tu partido</p>
@@ -150,7 +150,7 @@
                 @foreach (var allied in Model.AlliedParties)
                 {
                     <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
-                        <img src="@allied.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.src='/uploads/parties/default.png'" />
+                        <img src="@allied.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.onerror=null; this.src='/uploads/parties/default.png';" />
                         <div class="flex-1">
                             <p class="text-sm font-black text-gray-900 line-clamp-1">@allied.Name</p>
                             <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">@allied.Acronym</p>

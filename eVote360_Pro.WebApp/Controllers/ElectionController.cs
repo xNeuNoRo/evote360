@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using eVote360_Pro.Application.DTOs.Election.Requests;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.WebApp.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
@@ -14,7 +14,8 @@ namespace eVote360_Pro.WebApp.Controllers
 
         public ElectionController(
             ICurrentUserService currentUserService,
-            IElectionService electionService)
+            IElectionService electionService
+        )
             : base(currentUserService)
         {
             _electionService = electionService;
@@ -27,7 +28,7 @@ namespace eVote360_Pro.WebApp.Controllers
             ViewData["Breadcrumbs"] = new[]
             {
                 ("Mantenimientos", (string?)null, (string?)null),
-                ("Elecciones", (string?)null, (string?)null)
+                ("Elecciones", (string?)null, (string?)null),
             };
 
             var elections = await _electionService.GetAllAsync();
@@ -42,7 +43,7 @@ namespace eVote360_Pro.WebApp.Controllers
             {
                 ("Mantenimientos", (string?)null, (string?)null),
                 ("Elecciones", "Index", "Election"),
-                ("Nueva Elección", (string?)null, (string?)null)
+                ("Nueva Elección", (string?)null, (string?)null),
             };
 
             return View();
@@ -59,7 +60,9 @@ namespace eVote360_Pro.WebApp.Controllers
             try
             {
                 await _electionService.CreateAsync(request);
-                ShowAlert("Proceso electoral programado exitosamente. Se encuentra en estado 'Pendiente'.");
+                ShowAlert(
+                    "Proceso electoral programado exitosamente. Se encuentra en estado 'Pendiente'."
+                );
                 return RedirectToAction(nameof(Index));
             }
             catch (BusinessException ex)
@@ -75,7 +78,9 @@ namespace eVote360_Pro.WebApp.Controllers
             try
             {
                 await _electionService.ActivateAsync(id);
-                ShowAlert("Elección activada exitosamente. Todas las operaciones políticas han sido bloqueadas y el sistema de votación está abierto.");
+                ShowAlert(
+                    "Elección activada exitosamente. Todas las operaciones políticas han sido bloqueadas y el sistema de votación está abierto."
+                );
             }
             catch (BusinessException ex)
             {
@@ -90,7 +95,9 @@ namespace eVote360_Pro.WebApp.Controllers
             try
             {
                 await _electionService.FinishAsync(id);
-                ShowAlert("La elección ha finalizado de forma definitiva. Los resultados están ahora disponibles para el escrutinio.");
+                ShowAlert(
+                    "La elección ha finalizado de forma definitiva. Los resultados están ahora disponibles para el escrutinio."
+                );
             }
             catch (BusinessException ex)
             {

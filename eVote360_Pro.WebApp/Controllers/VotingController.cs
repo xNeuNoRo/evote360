@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using eVote360_Pro.Application.DTOs.Voting.Requests;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
@@ -16,7 +16,8 @@ namespace eVote360_Pro.WebApp.Controllers
         public VotingController(
             IVotingService votingService,
             IElectionService electionService,
-            ICitizenService citizenService)
+            ICitizenService citizenService
+        )
         {
             _votingService = votingService;
             _electionService = electionService;
@@ -26,7 +27,6 @@ namespace eVote360_Pro.WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Verify if there is an active election first.
             var activeElection = await _electionService.GetActiveElectionAsync();
             if (activeElection == null)
             {
@@ -50,15 +50,17 @@ namespace eVote360_Pro.WebApp.Controllers
                 var success = await _votingService.ValidateAndSendOtpAsync(request);
                 if (success)
                 {
-                    // Fetch citizen ID
                     var citizens = await _citizenService.GetAllAsync();
-                    var citizen = citizens.FirstOrDefault(c => c.IdentityDocument == request.IdentityDocument);
-                    
+                    var citizen = citizens.FirstOrDefault(c =>
+                        c.IdentityDocument == request.IdentityDocument
+                    );
+
                     if (citizen != null)
                     {
                         TempData["VerifyCitizenId"] = citizen.Id.ToString();
                         TempData["IdentityDocument"] = request.IdentityDocument;
-                        TempData["SuccessMessage"] = "Validación exitosa. Hemos enviado un código de acceso a tu correo electrónico.";
+                        TempData["SuccessMessage"] =
+                            "Validación exitosa. Hemos enviado un código de acceso a tu correo electrónico.";
                         return RedirectToAction(nameof(Verify));
                     }
                 }
@@ -94,34 +96,38 @@ namespace eVote360_Pro.WebApp.Controllers
             }
 
             ViewBag.IdentityDocument = TempData.Peek("IdentityDocument")?.ToString();
-            
-            var request = new VerifyCodeRequest(int.Parse(citizenIdStr), activeElection.Id, string.Empty);
+
+            var request = new VerifyCodeRequest(
+                int.Parse(citizenIdStr),
+                activeElection.Id,
+                string.Empty
+            );
             return View(request);
         }
 
         [HttpPost]
         public async Task<IActionResult> Verify(VerifyCodeRequest request)
         {
-            // Re-store TempData for context on failure
             TempData.Keep("VerifyCitizenId");
             TempData.Keep("IdentityDocument");
 
             try
             {
                 var response = await _votingService.VerifyOtpAsync(request);
-                
+
                 if (!response.IsValid)
                 {
-                    ModelState.AddModelError(string.Empty, response.ErrorMessage ?? "Código inválido.");
+                    ModelState.AddModelError(
+                        string.Empty,
+                        response.ErrorMessage ?? "Código inválido."
+                    );
                     return View(request);
                 }
 
-                // If verified, store the verification token/id to allow entering the Ballot
                 HttpContext.Session.SetString("VerifiedCitizenId", request.CitizenId.ToString());
                 HttpContext.Session.SetString("ElectionId", request.ElectionId.ToString());
                 HttpContext.Session.SetString("VerificationCode", request.Code);
 
-                // Remove temporary verify data
                 TempData.Remove("VerifyCitizenId");
                 TempData.Remove("IdentityDocument");
 
@@ -167,14 +173,16 @@ namespace eVote360_Pro.WebApp.Controllers
                 return Unauthorized(new { message = "Sesión de votación expirada o inválida." });
             }
 
-            // Ensure the vote request is bound to the currently verified citizen
-            request = request with { CitizenId = int.Parse(citizenIdStr), VerificationCode = verificationCode };
+            request = request with
+            {
+                CitizenId = int.Parse(citizenIdStr),
+                VerificationCode = verificationCode,
+            };
 
             try
             {
                 await _votingService.SubmitVoteAsync(request);
-                
-                // Clear session after successful vote
+
                 HttpContext.Session.Remove("VerifiedCitizenId");
                 HttpContext.Session.Remove("ElectionId");
 

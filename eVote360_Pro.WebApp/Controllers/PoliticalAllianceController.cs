@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using eVote360_Pro.Application.DTOs.PoliticalAlliance.Requests;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Enums;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.WebApp.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
@@ -13,7 +13,10 @@ namespace eVote360_Pro.WebApp.Controllers
     {
         private readonly IPoliticalAllianceService _allianceService;
 
-        public PoliticalAllianceController(ICurrentUserService currentUserService, IPoliticalAllianceService allianceService)
+        public PoliticalAllianceController(
+            ICurrentUserService currentUserService,
+            IPoliticalAllianceService allianceService
+        )
             : base(currentUserService)
         {
             _allianceService = allianceService;
@@ -23,18 +26,20 @@ namespace eVote360_Pro.WebApp.Controllers
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Alianzas Políticas";
-            ViewData["Breadcrumbs"] = new[]
-            {
-                ("Alianzas", (string?)null, (string?)null)
-            };
+            ViewData["Breadcrumbs"] = new[] { ("Alianzas", (string?)null, (string?)null) };
 
             var alliances = await _allianceService.GetMyAlliancesAsync();
             int myPartyId = _currentUserService.PartyId ?? 0;
 
-            // Separate into the three required categories
-            var pendingToRespond = alliances.Where(a => a.ReceiverPartyId == myPartyId && a.Status == AllianceStatus.Pending.ToString()).ToList();
+            var pendingToRespond = alliances
+                .Where(a =>
+                    a.ReceiverPartyId == myPartyId && a.Status == AllianceStatus.Pending.ToString()
+                )
+                .ToList();
             var sentRequests = alliances.Where(a => a.RequesterPartyId == myPartyId).ToList();
-            var activeAlliances = alliances.Where(a => a.Status == AllianceStatus.Accepted.ToString()).ToList();
+            var activeAlliances = alliances
+                .Where(a => a.Status == AllianceStatus.Accepted.ToString())
+                .ToList();
 
             ViewBag.PendingToRespond = pendingToRespond;
             ViewBag.SentRequests = sentRequests;
@@ -51,7 +56,7 @@ namespace eVote360_Pro.WebApp.Controllers
             ViewData["Breadcrumbs"] = new[]
             {
                 ("Alianzas", "Index", "PoliticalAlliance"),
-                ("Nueva Solicitud", (string?)null, (string?)null)
+                ("Nueva Solicitud", (string?)null, (string?)null),
             };
 
             var availableParties = await _allianceService.GetAvailablePartiesForRequestAsync();
