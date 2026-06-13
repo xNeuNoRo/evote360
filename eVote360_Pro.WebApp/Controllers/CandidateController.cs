@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using eVote360_Pro.Application.DTOs.Candidate.Requests;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Application.ViewModels.CandidateViewModels;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.WebApp.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
@@ -13,7 +13,10 @@ namespace eVote360_Pro.WebApp.Controllers
     {
         private readonly ICandidateService _candidateService;
 
-        public CandidateController(ICurrentUserService currentUserService, ICandidateService candidateService)
+        public CandidateController(
+            ICurrentUserService currentUserService,
+            ICandidateService candidateService
+        )
             : base(currentUserService)
         {
             _candidateService = candidateService;
@@ -23,10 +26,7 @@ namespace eVote360_Pro.WebApp.Controllers
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Mis Candidatos";
-            ViewData["Breadcrumbs"] = new[]
-            {
-                ("Candidatos", (string?)null, (string?)null)
-            };
+            ViewData["Breadcrumbs"] = new[] { ("Candidatos", (string?)null, (string?)null) };
             var candidates = await _candidateService.GetAllAsync();
             return View(candidates);
         }
@@ -38,7 +38,7 @@ namespace eVote360_Pro.WebApp.Controllers
             ViewData["Breadcrumbs"] = new[]
             {
                 ("Candidatos", "Index", "Candidate"),
-                ("Crear", (string?)null, (string?)null)
+                ("Crear", (string?)null, (string?)null),
             };
             return View(new CreateCandidateViewModel());
         }
@@ -54,8 +54,7 @@ namespace eVote360_Pro.WebApp.Controllers
 
             try
             {
-                var request = new CreateCandidateRequest
-                (
+                var request = new CreateCandidateRequest(
                     FirstName: model.FirstName,
                     LastName: model.LastName,
                     PhotoFile: model.PhotoFile!,
@@ -78,13 +77,14 @@ namespace eVote360_Pro.WebApp.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var candidate = await _candidateService.GetByIdAsync(id);
-            if (candidate == null) return NotFound();
+            if (candidate == null)
+                return NotFound();
 
             ViewData["Title"] = "Editar Candidato";
             ViewData["Breadcrumbs"] = new[]
             {
                 ("Candidatos", "Index", "Candidate"),
-                ("Editar", (string?)null, (string?)null)
+                ("Editar", (string?)null, (string?)null),
             };
 
             var model = new UpdateCandidateViewModel
@@ -94,9 +94,9 @@ namespace eVote360_Pro.WebApp.Controllers
                 LastName = candidate.LastName,
                 IsActive = candidate.IsActive,
                 CurrentPhotoPath = candidate.PhotoPath,
-                HasParticipated = candidate.VotesCount > 0 // This is a heuristic, the service handles real check
+                HasParticipated = candidate.VotesCount > 0,
             };
-            
+
             return View(model);
         }
 
@@ -111,8 +111,7 @@ namespace eVote360_Pro.WebApp.Controllers
 
             try
             {
-                var request = new UpdateCandidateRequest
-                (
+                var request = new UpdateCandidateRequest(
                     Id: model.Id,
                     FirstName: model.FirstName,
                     LastName: model.LastName,
@@ -143,7 +142,11 @@ namespace eVote360_Pro.WebApp.Controllers
             try
             {
                 await _candidateService.ToggleStatusAsync(id, activate);
-                ShowAlert(activate ? "Candidato activado exitosamente." : "Candidato inactivado exitosamente.");
+                ShowAlert(
+                    activate
+                        ? "Candidato activado exitosamente."
+                        : "Candidato inactivado exitosamente."
+                );
             }
             catch (BusinessException ex)
             {

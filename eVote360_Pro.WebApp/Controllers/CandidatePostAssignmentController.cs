@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using eVote360_Pro.Application.DTOs.CandidatePostAssignment.Requests;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.WebApp.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
@@ -16,7 +16,8 @@ namespace eVote360_Pro.WebApp.Controllers
         public CandidatePostAssignmentController(
             ICurrentUserService currentUserService,
             ICandidatePostAssignmentService assignmentService,
-            IElectivePositionService positionService)
+            IElectivePositionService positionService
+        )
             : base(currentUserService)
         {
             _assignmentService = assignmentService;
@@ -27,10 +28,7 @@ namespace eVote360_Pro.WebApp.Controllers
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Armar Boletas";
-            ViewData["Breadcrumbs"] = new[]
-            {
-                ("Asignaciones", (string?)null, (string?)null)
-            };
+            ViewData["Breadcrumbs"] = new[] { ("Asignaciones", (string?)null, (string?)null) };
 
             var assignments = await _assignmentService.GetMyBallotAsync();
             int myPartyId = _currentUserService.PartyId ?? 0;
@@ -46,7 +44,7 @@ namespace eVote360_Pro.WebApp.Controllers
             ViewData["Breadcrumbs"] = new[]
             {
                 ("Asignaciones", "Index", "CandidatePostAssignment"),
-                ("Nueva Asignación", (string?)null, (string?)null)
+                ("Nueva Asignación", (string?)null, (string?)null),
             };
 
             var candidates = await _assignmentService.GetAvailableCandidatesAsync();
@@ -72,10 +70,11 @@ namespace eVote360_Pro.WebApp.Controllers
                     return RedirectToAction(nameof(Create));
                 }
 
-                // isAlly can be derived from frontend or safely overridden if backend does checking.
-                // We trust the frontend checkbox or hidden field, but the service validates it anyway.
-
-                var request = new SaveBallotAssignmentRequest(PositionId: positionId, CandidateId: candidateId, IsAlly: isAlly);
+                var request = new SaveBallotAssignmentRequest(
+                    PositionId: positionId,
+                    CandidateId: candidateId,
+                    IsAlly: isAlly
+                );
                 await _assignmentService.SaveAssignmentAsync(request);
 
                 ShowAlert("Candidato asignado a la boleta exitosamente.");
