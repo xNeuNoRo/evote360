@@ -33,13 +33,20 @@
         transform: scale(1.02);
     }
     
-    .check-mark {
-        transform: scale(0);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    .stamp-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(3) rotate(-20deg);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
-    .candidate-card.selected .check-mark {
-        transform: scale(1);
+    .candidate-card.selected .stamp-overlay {
+        transform: translate(-50%, -50%) scale(1) rotate(-10deg);
+        opacity: 0.95;
     }
 
     .candidate-card.selected .grayscale-hover {
@@ -199,8 +206,11 @@
                         <div onclick="selectCandidate(${position.positionId}, null, null, this)" 
                              class="candidate-card ${isSelected ? 'selected' : ''} cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-3xl p-6 flex flex-col items-center justify-center text-center h-full relative overflow-hidden group">
                             
-                            <div class="check-mark absolute top-4 right-4 w-8 h-8 bg-emerald-500 rounded-full text-white flex items-center justify-center shadow-md">
-                                <i data-lucide="check" class="w-5 h-5"></i>
+                            <div class="stamp-overlay flex flex-col items-center justify-center">
+                                <div class="w-32 h-32 border-[6px] border-red-500 rounded-full flex flex-col items-center justify-center text-red-500 bg-white/40 backdrop-blur-sm shadow-2xl">
+                                    <i data-lucide="x" class="w-16 h-16" stroke-width="3"></i>
+                                    <span class="font-black text-xl tracking-widest mt-1">NULO</span>
+                                </div>
                             </div>
 
                             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600 transition-colors">
@@ -215,8 +225,11 @@
                         <div onclick="selectCandidate(${position.positionId}, ${opt.candidateId}, ${opt.partyId}, this)" 
                              class="candidate-card ${isSelected ? 'selected' : ''} cursor-pointer bg-white border-2 border-gray-200 rounded-3xl p-0 relative overflow-hidden flex flex-col h-full">
                             
-                            <div class="check-mark absolute top-4 right-4 w-8 h-8 bg-emerald-500 rounded-full text-white flex items-center justify-center shadow-lg z-20 border-2 border-white">
-                                <i data-lucide="check" class="w-5 h-5"></i>
+                            <div class="stamp-overlay flex flex-col items-center justify-center">
+                                <div class="w-32 h-32 border-[6px] border-emerald-500 rounded-full flex flex-col items-center justify-center text-emerald-500 bg-white/40 backdrop-blur-sm shadow-2xl">
+                                    <i data-lucide="check" class="w-16 h-16" stroke-width="3"></i>
+                                    <span class="font-black text-lg tracking-widest mt-1">VOTADO</span>
+                                </div>
                             </div>
                             
                             <!-- Cabecera Partido -->
@@ -367,7 +380,7 @@
             // Wait for the animation to play before transitioning
             setTimeout(() => {
                 nextStep();
-            }, 400);
+            }, 800);
         }
 
         window.nextStep = function() {
