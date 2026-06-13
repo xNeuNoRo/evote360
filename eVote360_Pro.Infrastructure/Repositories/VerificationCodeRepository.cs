@@ -47,7 +47,7 @@ namespace eVote360_Pro.Infrastructure.Repositories
 
             foreach (var code in previousCodes)
             {
-                code.Use(_dateTimeProvider.UtcNow);
+                code.Invalidate();
             }
 
             // El guardado se lo delegamos al UnitOfWork.SaveChangesAsync()
