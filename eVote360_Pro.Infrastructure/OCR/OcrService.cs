@@ -27,45 +27,43 @@ namespace eVote360_Pro.Infrastructure.OCR
         public async Task<OcrResponse> ProcessIdentityCardAsync(IFormFile idCardImage)
         {
             var response = new OcrResponse();
-            string? tempPath = null;
-            string? optimizedPath = null;
+            string tempAbsPath = Path.GetTempFileName();
+            string optAbsPath = tempAbsPath + "_opt.png";
 
             try
             {
-                // Subimos la imagen a una ruta temporal para procesamiento
-                tempPath = await _fileService.UploadTempFileAsync(idCardImage);
+                // Guardamos la imagen temporalmente en la ruta "/tmp" del SO para procesarla con OpenCV
+                using (var stream = new FileStream(tempAbsPath, FileMode.Create))
+                {
+                    await idCardImage.CopyToAsync(stream);
+                }
 
-                // Obtenemos la ruta absoluta del archivo temporal
-                string tempAbsPath = _fileService.GetAbsolutePath(tempPath);
-
-                // Validamos que la imagen contenga un documento con forma válida antes de intentar OCR
                 using (var src = new Mat(tempAbsPath))
                 {
-                    // Detectamos si la imagen tiene un documento con forma válida (cuadrilátero dominante)
                     response.IsDocumentValid = VisionProcessor.ContainsDocument(src);
 
                     if (!response.IsDocumentValid)
+                    {
                         _logger.LogWarning(
                             "La imagen procesada no tiene una forma geometrica de documento valida."
                         );
+                        response.IsSuccess = false;
+                        response.ErrorMessage =
+                            "La imagen proporcionada no parece ser un documento de identidad válido. Asegúrese de que los bordes del documento sean visibles y haya buena iluminación.";
+                        return response;
+                    }
 
                     // Preparamos la imagen para el OCR
                     using (var optimized = VisionProcessor.PrepareForTextExtraction(src))
                     {
-                        optimizedPath = tempPath + "_opt.png";
-                        string optAbsPath = _fileService.GetAbsolutePath(optimizedPath);
                         optimized.SaveImage(optAbsPath);
                     }
                 }
 
-                // Obtenemos la ruta absoluta del archivo optimizado para el OCR
-                string finalAbsPath = _fileService.GetAbsolutePath(optimizedPath);
-
                 // Ejecutamos el OCR utilizando Tesseract en la imagen optimizada
                 using (var engine = new TesseractEngine(_tessdataPath, "spa", EngineMode.Default))
-                // Cargamos la imagen optimizada y procesamos el texto
-                using (var img = Pix.LoadFromFile(finalAbsPath))
                 // Obtenemos el resultado del OCR y extraemos el numero de identidad utilizando un patrón regex específico
+                using (var img = Pix.LoadFromFile(optAbsPath))
                 using (var page = engine.Process(img))
                 {
                     response.Confidence = page.GetMeanConfidence();
@@ -76,7 +74,7 @@ namespace eVote360_Pro.Infrastructure.OCR
                 response.IsSuccess = !string.IsNullOrEmpty(response.IdentityNumber);
                 if (!response.IsSuccess)
                     response.ErrorMessage =
-                        "No se pudo detectar un número de identidad en la imagen.";
+                        "No se pudo extraer el número de identidad. Intente con otra fotografía más clara.";
 
                 return response;
             }
@@ -85,16 +83,27 @@ namespace eVote360_Pro.Infrastructure.OCR
                 // Logueamos el error con detalle para facilitar la investigación y solución de problemas
                 _logger.LogError(ex, "Fallo crítico en el proceso de OCR.");
                 response.IsSuccess = false;
-                response.ErrorMessage = $"Error en el motor de detección: {ex.Message}";
+
+                // Si la excepción es por falta de dependencias nativas,
+                // damos un mensaje específico para facilitar el diagnóstico del problema en el servidor
+                if (ex.InnerException is DllNotFoundException)
+                {
+                    response.ErrorMessage =
+                        "Error interno: Faltan dependencias nativas del motor OCR en el servidor.";
+                }
+                else
+                {
+                    response.ErrorMessage = $"Error en el motor de detección: {ex.Message}";
+                }
                 return response;
             }
             finally
             {
                 // Limpiamos los archivos temporales para evitar acumularlos
-                if (tempPath != null)
-                    _fileService.DeleteFile(tempPath);
-                if (optimizedPath != null)
-                    _fileService.DeleteFile(optimizedPath);
+                if (File.Exists(tempAbsPath))
+                    File.Delete(tempAbsPath);
+                if (File.Exists(optAbsPath))
+                    File.Delete(optAbsPath);
             }
         }
 
@@ -107,8 +116,8 @@ namespace eVote360_Pro.Infrastructure.OCR
             if (string.IsNullOrWhiteSpace(text))
                 return null;
 
-            var match = Regex.Match(text, @"\b\d{3}-?\d{7}-?\d{1}\b");
-            return match.Success ? match.Value.Replace("-", "") : null;
+            var match = Regex.Match(text, @"\b\d{3}[-\s]?\d{7}[-\s]?\d{1}\b");
+            return match.Success ? match.Value.Replace("-", "").Replace(" ", "") : null;
         }
     }
 }

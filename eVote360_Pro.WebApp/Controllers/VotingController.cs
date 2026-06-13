@@ -50,10 +50,12 @@ namespace eVote360_Pro.WebApp.Controllers
                 var success = await _votingService.ValidateAndSendOtpAsync(request);
                 if (success)
                 {
+                    // El servicio ya validó y verificó que el ciudadano existe, está activo y envió el OTP
                     var citizens = await _citizenService.GetAllAsync();
-                    var citizen = citizens.FirstOrDefault(c =>
-                        c.IdentityDocument == request.IdentityDocument
-                    );
+                    
+                    // Aseguramos de quitar los guiones al comparar, ya que el servicio usa IdentityDocument.Create que limpia el input
+                    var cleanId = request.IdentityDocument.Replace("-", "").Trim();
+                    var citizen = citizens.FirstOrDefault(c => c.IdentityDocument.Replace("-", "") == cleanId);
 
                     if (citizen != null)
                     {
