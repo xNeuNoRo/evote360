@@ -31,7 +31,8 @@ namespace eVote360_Pro.Domain.Entities
             IdentityDocument identityDocument,
             string firstName,
             string lastName,
-            string email
+            string email,
+            bool isActive = true
         )
         {
             ValidateBasicInfo(firstName, lastName, email);
@@ -42,7 +43,7 @@ namespace eVote360_Pro.Domain.Entities
                 FirstName = firstName.Trim(),
                 LastName = lastName.Trim(),
                 Email = email.Trim().ToLowerInvariant(),
-                IsActive = true,
+                IsActive = isActive,
             };
         }
 

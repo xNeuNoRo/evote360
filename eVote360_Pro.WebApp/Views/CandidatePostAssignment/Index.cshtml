@@ -1,7 +1,10 @@
 @using eVote360_Pro.Application.DTOs.CandidatePostAssignment.Responses
 @model IEnumerable<BallotAssignmentResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
 @{
     ViewData["Title"] = "Asignación de Candidatos";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
     ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
     {
         ("Procesos", "Index", "Dashboard"),
@@ -14,10 +17,20 @@
         <h1 class="text-3xl font-black text-gray-900 tracking-tight">Armar Boletas</h1>
         <p class="text-gray-500 text-sm mt-1 font-medium">Asigna tus candidatos propios o aliados a los puestos electivos disponibles.</p>
     </div>
-    <a asp-action="Create" style="view-transition-name: card-assignment;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-assignment;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
         <i data-lucide="clipboard-plus" class="w-5 h-5"></i>
         Asignar Candidato
     </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Asignar Candidato (Bloqueado)
+        </button>
+    }
 </div>
 
 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -74,13 +87,22 @@
                         </td>
                         <td class="py-4 px-6">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea desvincular este candidato de este puesto electivo?">
+                                @if (!isElectionActive)
+                                {
+                                    <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea desvincular este candidato de este puesto electivo?">
                                     <input type="hidden" name="id" value="@assignment.Id" />
                                     <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Eliminar Relación">
                                         <i data-lucide="trash-2" class="w-5 h-5"></i>
                                     </button>
                                 </form>
-                            </div>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
                         </td>
                     </tr>
                 }

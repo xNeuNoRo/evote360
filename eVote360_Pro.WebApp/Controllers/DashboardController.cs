@@ -19,13 +19,18 @@ namespace eVote360_Pro.WebApp.Controllers
             _dashboardService = dashboardService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromQuery] int? year)
         {
             if (_currentUserService.Role == SystemRoles.Administrator)
             {
                 var adminStats = await _dashboardService.GetGeneralStatisticsAsync();
-                var adminReport = await _dashboardService.GetAdminDashboardAsync(DateTime.Now.Year);
-                ViewBag.ReportData = adminReport;
+                
+                // Si no se provee año, intentamos usar el actual, o el más reciente
+                int selectedYear = year ?? DateTime.Now.Year;
+                
+                var adminReportList = await _dashboardService.GetAdminDashboardAsync(selectedYear);
+                ViewBag.ReportData = adminReportList;
+                ViewBag.SelectedYear = selectedYear;
 
                 return View("AdminDashboard", adminStats);
             }

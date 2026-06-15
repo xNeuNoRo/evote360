@@ -9,6 +9,11 @@ namespace eVote360_Pro.Application.Interfaces.Services
     public interface IVotingService
     {
         /// <summary>
+        /// Valida si el ciudadano puede votar (Paso 1). Lanza excepciones si no es válido.
+        /// </summary>
+        Task ValidateCitizenCanVoteAsync(string identityDocument);
+
+        /// <summary>
         /// Valida al ciudadano contra el padrón y realiza el OCR de su cédula.
         /// Si es exitoso, envía el código OTP por correo.
         /// </summary>

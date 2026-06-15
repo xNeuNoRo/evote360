@@ -73,6 +73,17 @@
                 <span asp-validation-for="LogoFile" class="text-xs font-bold text-red-500 mt-2 block text-center"></span>
             </div>
 
+            <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input asp-for="IsActive" type="checkbox" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <div class="flex flex-col cursor-pointer" onclick="document.getElementById('IsActive').click()">
+                    <span class="text-sm font-bold text-gray-900">Estado Inicial (Activo)</span>
+                    <p class="text-xs text-gray-500 font-medium">Si está activo, estará disponible inmediatamente.</p>
+                </div>
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
                 <a asp-action="Index" class="px-5 py-2.5 text-sm font-bold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
                     Cancelar

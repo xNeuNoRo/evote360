@@ -9,6 +9,7 @@ namespace eVote360_Pro.Application.DTOs.PoliticalParty.Requests
         string Name,
         string Acronym,
         string? Description,
-        IFormFile LogoFile
+        IFormFile LogoFile,
+        bool IsActive = true
     );
 }

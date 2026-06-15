@@ -1,6 +1,9 @@
 @model IEnumerable<eVote360_Pro.Application.DTOs.PoliticalParty.Responses.PoliticalPartyResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
 @{
     ViewData["Title"] = "Partidos Políticos";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
     ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
     {
         ("Catálogos", "Index", "Dashboard"),
@@ -16,11 +19,39 @@
         </h1>
         <p class="text-sm text-gray-500 mt-1 font-medium">Gestiona las agrupaciones políticas y sus identidades visuales.</p>
     </div>
-    <a asp-action="Create" style="view-transition-name: card-party;" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-party;" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Nuevo Partido
     </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Nuevo Partido (Bloqueado)
+        </button>
+    }
 </div>
+
+
+@if (isElectionActive)
+{
+    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl">
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+                <i data-lucide="alert-triangle" class="h-5 w-5 text-amber-500"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-bold text-amber-800">Mantenimiento Deshabilitado</h3>
+                <p class="text-sm text-amber-700 mt-1">
+                    Las opciones de creación y edición están deshabilitadas ya que hay una elección en proceso.
+                </p>
+            </div>
+        </div>
+    </div>
+}
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
@@ -90,6 +121,8 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                @if (!isElectionActive)
+                                {
                                     <a asp-action="Edit" asp-route-id="@item.Id" style="view-transition-name: card-party-@item.Id;" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="Editar">
                                         <i data-lucide="edit-2" class="w-4 h-4"></i>
                                     </a>
@@ -100,6 +133,13 @@
                                             <i data-lucide="@(item.IsActive ? "power-off" : "power")" class="w-4 h-4"></i>
                                         </button>
                                     </form>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
                                 </div>
                             </td>
                         </tr>

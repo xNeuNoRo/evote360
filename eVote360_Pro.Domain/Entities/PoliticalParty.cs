@@ -39,7 +39,8 @@ namespace eVote360_Pro.Domain.Entities
             string name,
             string acronym,
             string logoPath,
-            string? description = null
+            string? description = null,
+            bool isActive = true
         )
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -66,7 +67,7 @@ namespace eVote360_Pro.Domain.Entities
                 Acronym = acronym.Trim().ToUpperInvariant(),
                 LogoPath = logoPath,
                 Description = description?.Trim(),
-                IsActive = true,
+                IsActive = isActive,
             };
         }
 
@@ -83,9 +84,21 @@ namespace eVote360_Pro.Domain.Entities
         {
             if (hasParticipated)
             {
-                // Si ya participó, solo se permite actualizar la descripción.
-                Description = description?.Trim();
-                return;
+                if (!string.Equals(Name, name.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new DomainException(
+                        "No se puede modificar el nombre de este partido político porque ya participó en una elección.",
+                        "PoliticalParty.NameImmutable"
+                    );
+                }
+
+                if (!string.Equals(Acronym, acronym.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new DomainException(
+                        "No se pueden modificar las siglas de este partido político porque ya participó en una elección.",
+                        "PoliticalParty.AcronymImmutable"
+                    );
+                }
             }
 
             if (string.IsNullOrWhiteSpace(name))

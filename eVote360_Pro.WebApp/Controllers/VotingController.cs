@@ -30,7 +30,7 @@ namespace eVote360_Pro.WebApp.Controllers
             var activeElection = await _electionService.GetActiveElectionAsync();
             if (activeElection == null)
             {
-                ViewBag.ErrorMessage = "No hay ningún proceso electoral activo en este momento.";
+                ViewBag.ErrorMessage = "No hay ningún proceso electoral en estos momentos.";
                 return View("NoElection");
             }
 
@@ -38,8 +38,53 @@ namespace eVote360_Pro.WebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(ValidateElectorRequest request)
+        public async Task<IActionResult> Index(string identityDocument)
         {
+            if (string.IsNullOrWhiteSpace(identityDocument))
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "El número de documento de identidad es requerido."
+                );
+                return View();
+            }
+
+            try
+            {
+                await _votingService.ValidateCitizenCanVoteAsync(identityDocument);
+
+                TempData["IdentityDocument"] = identityDocument;
+                return RedirectToAction(nameof(ValidateIdentity));
+            }
+            catch (DomainException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View();
+            }
+            catch (BusinessException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ValidateIdentity()
+        {
+            var identityDocument = TempData.Peek("IdentityDocument")?.ToString();
+            if (string.IsNullOrEmpty(identityDocument))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(new ValidateElectorRequest(identityDocument, null!));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ValidateIdentity(ValidateElectorRequest request)
+        {
+            TempData.Keep("IdentityDocument");
+
             if (!ModelState.IsValid)
             {
                 return View(request);
@@ -50,17 +95,15 @@ namespace eVote360_Pro.WebApp.Controllers
                 var success = await _votingService.ValidateAndSendOtpAsync(request);
                 if (success)
                 {
-                    // El servicio ya validó y verificó que el ciudadano existe, está activo y envió el OTP
                     var citizens = await _citizenService.GetAllAsync();
-                    
-                    // Aseguramos de quitar los guiones al comparar, ya que el servicio usa IdentityDocument.Create que limpia el input
                     var cleanId = request.IdentityDocument.Replace("-", "").Trim();
-                    var citizen = citizens.FirstOrDefault(c => c.IdentityDocument.Replace("-", "") == cleanId);
+                    var citizen = citizens.FirstOrDefault(c =>
+                        c.IdentityDocument.Replace("-", "") == cleanId
+                    );
 
                     if (citizen != null)
                     {
                         TempData["VerifyCitizenId"] = citizen.Id.ToString();
-                        TempData["IdentityDocument"] = request.IdentityDocument;
                         TempData["SuccessMessage"] =
                             "Validación exitosa. Hemos enviado un código de acceso a tu correo electrónico.";
                         return RedirectToAction(nameof(Verify));

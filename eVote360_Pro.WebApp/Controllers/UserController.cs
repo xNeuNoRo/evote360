@@ -135,40 +135,6 @@ namespace eVote360_Pro.WebApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> AssignParty(Guid userId)
-        {
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null || user.RoleName != SystemRoles.PoliticalLeader)
-                return NotFound();
-
-            var parties = await _partyService.GetAllAsync();
-            var activeParties = parties.Where(p => p.IsActive).ToList();
-
-            ViewBag.Parties = new SelectList(activeParties, "Id", "Name", user.AssignedPartyId);
-            ViewBag.UserFullName = user.FullName;
-            ViewBag.UserId = user.Id;
-            ViewBag.CurrentPartyId = user.AssignedPartyId;
-
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AssignPartyPost(Guid userId, int partyId)
-        {
-            var request = new SaveLeaderAssignmentRequest(userId, partyId);
-            await _assignmentService.CreateAssignmentAsync(request);
-            ShowAlert("Partido asignado exitosamente al dirigente", "success");
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveParty(Guid userId)
-        {
-            await _assignmentService.RemoveAssignmentAsync(userId);
-            ShowAlert("Se ha removido el partido asignado al dirigente", "success");
-            return RedirectToAction(nameof(Index));
-        }
-
         private async Task LoadRolesAsync()
         {
             var roles = await _roleService.GetRolesAsync();

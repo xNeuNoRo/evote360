@@ -1,3 +1,4 @@
+using eVote360_Pro.Application.DTOs.Dashboard.Responses;
 using eVote360_Pro.Application.DTOs.Voting.Responses;
 
 namespace eVote360_Pro.Application.Interfaces.Services
@@ -13,10 +14,10 @@ namespace eVote360_Pro.Application.Interfaces.Services
         Task<DashboardStatisticsResponse> GetGeneralStatisticsAsync();
 
         /// <summary>
-        /// Obtiene el reporte de resultados para el año electoral seleccionado en el Home del Admin.
+        /// Obtiene el listado de elecciones para el año electoral seleccionado en el Home del Admin.
         /// (Solo para elecciones finalizadas).
         /// </summary>
-        Task<ResultReportResponse?> GetAdminDashboardAsync(int electoralYear);
+        Task<List<ElectionSummaryResponse>> GetAdminDashboardAsync(int electoralYear);
 
         /// <summary>
         /// Obtiene un resumen del estado de la elección activa para el Home del Dirigente.

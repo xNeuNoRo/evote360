@@ -1,5 +1,4 @@
-@using eVote360_Pro.Application.DTOs.Voting.Requests
-@model ValidateElectorRequest
+@model string
 @{
     Layout = "_VoterLayout";
     ViewData["Title"] = "Autenticación Electoral";
@@ -7,15 +6,17 @@
 
 <div class="max-w-xl mx-auto">
     <div class="text-center mb-10">
-        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">Autenticación Biometríca</h1>
-        <p class="text-gray-500 font-medium">Por favor, ingresa tu número de cédula y sube una fotografía clara de la parte frontal para validar tu identidad mediante IA.</p>
+        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">Autenticación Electoral</h1>
+        <p class="text-gray-500 font-medium">Por favor, ingresa tu número de documento de identidad para validar tu participación en el proceso electoral activo.</p>
     </div>
 
-    <form asp-action="Index" method="post" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6">
+    <form asp-action="Index" method="post" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6 relative overflow-hidden">
         
+        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-blue-50 rounded-full blur-2xl"></div>
+
         @if (!ViewData.ModelState.IsValid)
         {
-            <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold flex items-start gap-3">
+            <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold flex items-start gap-3 relative z-10">
                 <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
                 <div>
                     <div asp-validation-summary="All" class="mt-1"></div>
@@ -24,36 +25,23 @@
         }
 
         <!-- Cédula -->
-        <div>
-            <label asp-for="IdentityDocument" class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Cédula de Identidad</label>
-            <input asp-for="IdentityDocument" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-lg font-black text-gray-900 tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-400" placeholder="000-0000000-0" required />
-            <span asp-validation-for="IdentityDocument" class="text-red-500 text-xs font-bold mt-1 block"></span>
+        <div class="relative z-10">
+            <label for="identityDocument" class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Número de documento de identidad</label>
+            <input type="text" id="identityDocument" name="identityDocument" value="@Model" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-lg font-black text-gray-900 tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-400" placeholder="000-0000000-0" required />
         </div>
 
-        <!-- Parte Delantera -->
-        <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Parte Delantera (Cédula)</label>
-            
-            <div class="relative group cursor-pointer">
-                <input asp-for="IdCardImage" type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="frontImageInput" required />
-                <div class="w-full border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center group-hover:border-blue-500 group-hover:bg-blue-50 transition-colors" id="frontImageDropzone">
-                    <img id="frontImagePreview" class="hidden mx-auto h-32 object-cover rounded-xl mb-4 shadow-sm" />
-                    <div id="frontImagePlaceholder">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i data-lucide="scan-face" class="w-6 h-6"></i>
-                        </div>
-                        <p class="text-sm font-bold text-gray-900">Sube una imagen de tu cédula</p>
-                        <p class="text-xs font-medium text-gray-500 mt-1">Soporta JPG, PNG (Max 5MB)</p>
-                    </div>
-                </div>
-            </div>
-            <span asp-validation-for="IdCardImage" class="text-red-500 text-xs font-bold mt-1 block"></span>
-        </div>
-
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-lg transition-all shadow-xl shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer flex items-center justify-center gap-2 group mt-8">
-            Continuar Validación
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-lg transition-all shadow-xl shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer flex items-center justify-center gap-2 group mt-8 relative z-10">
+            Votar
             <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
         </button>
+
+        <div class="pt-6 border-t border-gray-100 text-center relative z-10">
+            <p class="text-sm text-gray-500 font-medium mb-3">¿Eres administrador o miembro de un partido?</p>
+            <a asp-controller="Auth" asp-action="Index" class="inline-flex items-center gap-2 text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                Acceder al sistema
+            </a>
+        </div>
     </form>
 </div>
 
@@ -62,31 +50,10 @@
     <script src="https://unpkg.com/imask"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // IMask for Identity Document
-            var idInput = document.getElementById('IdentityDocument');
+            var idInput = document.getElementById('identityDocument');
             if (idInput) {
                 IMask(idInput, { mask: '000-0000000-0' });
             }
-
-            // Image Preview
-            const frontInput = document.getElementById('frontImageInput');
-            const frontPreview = document.getElementById('frontImagePreview');
-            const frontPlaceholder = document.getElementById('frontImagePlaceholder');
-
-            frontInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        frontPreview.src = e.target.result;
-                        frontPreview.classList.remove('hidden');
-                        frontPlaceholder.classList.add('hidden');
-                    }
-                    reader.readAsDataURL(this.files[0]);
-                } else {
-                    frontPreview.classList.add('hidden');
-                    frontPlaceholder.classList.remove('hidden');
-                }
-            });
         });
     </script>
 }

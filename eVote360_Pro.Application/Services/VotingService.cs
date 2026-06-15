@@ -67,13 +67,46 @@ namespace eVote360_Pro.Application.Services
             _dateTimeProvider = dateTimeProvider;
         }
 
+        public async Task ValidateCitizenCanVoteAsync(string document)
+        {
+            var election =
+                await _electionRepository.GetActiveElectionAsync()
+                ?? throw new BusinessException(
+                    "No hay ningún proceso electoral en estos momentos.",
+                    "Voting.NoActiveElection"
+                );
+
+            var identityDocument = IdentityDocument.Create(document);
+
+            var citizen =
+                await _citizenRepository.GetByIdentityDocumentAsync(identityDocument.Value)
+                ?? throw new BusinessException(
+                    "Este ciudadano no se encuentra registrado en el padrón electoral.",
+                    "Voting.CitizenNotFound"
+                );
+
+            if (!citizen.IsActive)
+                throw new BusinessException(
+                    "Este ciudadano se encuentra inactivo y no tiene derecho al voto.",
+                    "Voting.CitizenInactive"
+                );
+
+            if (await _voterParticipationRepository.HasAlreadyVotedAsync(citizen.Id, election.Id))
+            {
+                throw new BusinessException(
+                    "Ya ha ejercido su derecho al voto.",
+                    "Voting.AlreadyVoted"
+                );
+            }
+        }
+
         public async Task<bool> ValidateAndSendOtpAsync(ValidateElectorRequest request)
         {
             // Validamos que haya una elección activa
             var election =
                 await _electionRepository.GetActiveElectionAsync()
                 ?? throw new BusinessException(
-                    "No existe una elección activa.",
+                    "No hay ningún proceso electoral en estos momentos.",
                     "Voting.NoActiveElection"
                 );
 
@@ -85,14 +118,14 @@ namespace eVote360_Pro.Application.Services
                 await _citizenRepository.GetByIdentityDocumentAsync(identityDocument.Value)
                 ?? throw new ValidationBusinessException(
                     nameof(request.IdentityDocument),
-                    "Ciudadano no encontrado.",
+                    "Este ciudadano no se encuentra registrado en el padrón electoral.",
                     "Voting.CitizenNotFound"
                 );
 
             // Si el ciudadano está inactivo, lo bloqueamos
             if (!citizen.IsActive)
                 throw new BusinessException(
-                    "El ciudadano se encuentra inactivo.",
+                    "Este ciudadano se encuentra inactivo y no tiene derecho al voto.",
                     "Voting.CitizenInactive"
                 );
 
@@ -100,7 +133,7 @@ namespace eVote360_Pro.Application.Services
             if (await _voterParticipationRepository.HasAlreadyVotedAsync(citizen.Id, election.Id))
             {
                 throw new BusinessException(
-                    "Este ciudadano ya emitió su voto en la elección activa.",
+                    "Ya ha ejercido su derecho al voto.",
                     "Voting.AlreadyVoted"
                 );
             }
@@ -135,7 +168,7 @@ namespace eVote360_Pro.Application.Services
             {
                 throw new ValidationBusinessException(
                     nameof(request.IdCardImage),
-                    "El número extraído no coincide con el ingresado.",
+                    "Los datos extraídos de la foto no coinciden con los datos previamente ingresados por el elector.",
                     "Voting.OcrMismatch"
                 );
             }
@@ -273,7 +306,7 @@ namespace eVote360_Pro.Application.Services
                 )
                 {
                     throw new BusinessException(
-                        "Doble intento de voto bloqueado.",
+                        "Ya ha ejercido su derecho al voto.",
                         "Voting.AlreadyVoted"
                     );
                 }

@@ -1,8 +1,11 @@
 @using eVote360_Pro.Application.DTOs.Election.Responses
 @using eVote360_Pro.Domain.Enums
 @model IEnumerable<ElectionResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
 @{
     ViewData["Title"] = "Elecciones";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
     ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
     {
         ("Procesos", "Index", "Dashboard"),
@@ -15,10 +18,20 @@
         <h1 class="text-3xl font-black text-gray-900 tracking-tight">Elecciones</h1>
         <p class="text-gray-500 text-sm mt-1 font-medium">Programa y controla el ciclo de vida de los procesos electorales.</p>
     </div>
-    <a asp-action="Create" style="view-transition-name: card-election;" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer">
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-election;" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer">
         <i data-lucide="calendar-plus" class="w-5 h-5"></i>
         Programar Elección
     </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Programar Elección (Bloqueado)
+        </button>
+    }
 </div>
 
 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -84,7 +97,7 @@
                         </td>
                         <td class="py-4 px-6">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                @if (election.Status == ElectionStatus.Pending.ToString())
+                                @if (election.Status == ElectionStatus.Pending.ToString() && !isElectionActive)
                                 {
                                     <form asp-action="Activate" method="post" class="inline confirm-form" data-message="¿Está seguro que desea ACTIVAR esta elección? Al hacerlo, se congelarán todas las configuraciones de partidos, boletas y candidatos.">
                                         <input type="hidden" name="id" value="@election.Id" />
@@ -102,7 +115,13 @@
                                         </button>
                                     </form>
                                 }
-                            </div>
+                                else if (election.Status == ElectionStatus.Finished.ToString() || (election.Status == ElectionStatus.Pending.ToString() && isElectionActive))
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción no disponible">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
                         </td>
                     </tr>
                 }

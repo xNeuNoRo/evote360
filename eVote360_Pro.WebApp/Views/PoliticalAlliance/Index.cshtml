@@ -1,7 +1,10 @@
 @using eVote360_Pro.Application.DTOs.PoliticalAlliance.Responses
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
 @using eVote360_Pro.Domain.Enums
 @{
     ViewData["Title"] = "Alianzas Políticas";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
     ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
     {
         ("Catálogos", "Index", "Dashboard"),
@@ -18,10 +21,20 @@
         <h1 class="text-3xl font-black text-gray-900 tracking-tight">Alianzas Políticas</h1>
         <p class="text-gray-500 text-sm mt-1 font-medium">Gestiona los acuerdos y coaliciones con otros partidos políticos.</p>
     </div>
-    <a asp-action="Create" style="view-transition-name: card-alliance;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-alliance;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
         <i data-lucide="handshake" class="w-5 h-5"></i>
         Crear Solicitud de Alianza
     </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Crear Solicitud de Alianza (Bloqueado)
+        </button>
+    }
 </div>
 
 <div class="space-y-12">
@@ -82,7 +95,9 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <form asp-action="Accept" method="post" class="inline confirm-form" data-message="¿Está seguro que desea aceptar la alianza con el partido @request.RequesterPartyName?">
+                                @if (!isElectionActive)
+                                {
+                                    <form asp-action="Accept" method="post" class="inline confirm-form" data-message="¿Está seguro que desea aceptar la alianza con el partido @request.RequesterPartyName?">
                                             <input type="hidden" name="id" value="@request.Id" />
                                             <button type="submit" class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors cursor-pointer" title="Aceptar Solicitud">
                                                 <i data-lucide="check" class="w-5 h-5"></i>
@@ -94,7 +109,14 @@
                                                 <i data-lucide="x" class="w-5 h-5"></i>
                                             </button>
                                         </form>
-                                    </div>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
                                 </td>
                             </tr>
                         }
@@ -167,13 +189,22 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la solicitud enviada a @request.ReceiverPartyName?">
+                                @if (!isElectionActive)
+                                {
+                                    <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la solicitud enviada a @request.ReceiverPartyName?">
                                             <input type="hidden" name="id" value="@request.Id" />
                                             <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Eliminar Solicitud">
                                                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                                             </button>
                                         </form>
-                                    </div>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
                                 </td>
                             </tr>
                         }
@@ -236,13 +267,22 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la alianza política con el partido @alliedPartyName?">
+                                @if (!isElectionActive)
+                                {
+                                    <form asp-action="Delete" method="post" class="inline confirm-form" data-message="¿Está seguro que desea eliminar la alianza política con el partido @alliedPartyName?">
                                             <input type="hidden" name="id" value="@alliance.Id" />
                                             <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Romper Alianza">
                                                 <i data-lucide="link-2-off" class="w-5 h-5"></i>
                                             </button>
                                         </form>
-                                    </div>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
                                 </td>
                             </tr>
                         }

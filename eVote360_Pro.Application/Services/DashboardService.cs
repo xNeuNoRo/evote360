@@ -1,3 +1,4 @@
+using eVote360_Pro.Application.DTOs.Dashboard.Responses;
 using eVote360_Pro.Application.DTOs.Voting.Responses;
 using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Common;
@@ -95,21 +96,32 @@ namespace eVote360_Pro.Application.Services
             );
         }
 
-        public async Task<ResultReportResponse?> GetAdminDashboardAsync(int electoralYear)
+        public async Task<List<ElectionSummaryResponse>> GetAdminDashboardAsync(int electoralYear)
         {
             var options = new QueryOptions<Election>
             {
                 Filter = e =>
                     e.RealizationDate.Year == electoralYear && e.Status == ElectionStatus.Finished,
+                Includes = new List<System.Linq.Expressions.Expression<Func<Election, object>>>
+                {
+                    e => e.Votes,
+                    e => e.Participations
+                },
                 IsTracking = false,
             };
 
-            var election = await _electionRepository.GetFirstOrDefaultAsync(options);
+            var elections = await _electionRepository.GetAllAsync(options);
 
-            if (election == null)
-                return null;
+            var result = elections.Select(e => new ElectionSummaryResponse(
+                Id: e.Id,
+                Name: e.Name,
+                RealizationDate: e.RealizationDate,
+                ParticipatingPartiesCount: e.Votes.Select(v => v.PartyId).Distinct().Count(),
+                RealCandidatesCount: e.Votes.Select(v => v.CandidateId).Distinct().Count(),
+                VoterParticipationCount: e.Participations.Count
+            )).ToList();
 
-            return await _resultService.GetReportAsync(election.Id);
+            return result;
         }
 
         public async Task<ResultReportResponse?> GetLeaderDashboardAsync()
