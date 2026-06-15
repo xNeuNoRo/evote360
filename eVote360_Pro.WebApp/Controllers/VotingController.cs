@@ -3,11 +3,12 @@ using eVote360_Pro.Application.Interfaces.Services;
 using eVote360_Pro.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace eVote360_Pro.WebApp.Controllers
 {
     [AllowAnonymous]
-    public class VotingController : Controller
+    public class VotingController : BaseController
     {
         private readonly IVotingService _votingService;
         private readonly IElectionService _electionService;
@@ -16,12 +17,24 @@ namespace eVote360_Pro.WebApp.Controllers
         public VotingController(
             IVotingService votingService,
             IElectionService electionService,
-            ICitizenService citizenService
-        )
+            ICitizenService citizenService,
+            ICurrentUserService currentUserService
+        ) : base(currentUserService)
         {
             _votingService = votingService;
             _electionService = electionService;
             _citizenService = citizenService;
+        }
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            // Si esta autenticado, quiere decir que es dirigente o administrador, por lo que no debería acceder a esta sección de votación
+            if (_currentUserService.IsAuthenticated)
+            {
+                context.Result = RedirectToAction("Index", "Dashboard");
+                return;
+            }
+            base.OnActionExecuting(context);
         }
 
         [HttpGet]

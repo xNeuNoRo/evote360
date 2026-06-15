@@ -279,6 +279,7 @@ namespace eVote360_Pro.Application.Services
 
                     return p.ToBallotPosition(candidatesForPosition);
                 })
+                .Where(p => p.Options.Any())
                 .ToList();
 
             return election.ToVoterBallot(ballotPositions);

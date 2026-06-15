@@ -60,15 +60,21 @@ namespace eVote360_Pro.Application.Services
             var positions = await _positionRepository.GetAllAsync(
                 new QueryOptions<ElectivePosition> { IsTracking = false }
             );
+
             var positionResults = new List<PositionResultResponse>();
 
             foreach (var position in positions)
             {
-                var distribution = await _voteRepository.GetVotesDistributionAsync(
+                var totalVotesForPosition = await _voteRepository.GetTotalVotesByPositionAsync(
                     electionId,
                     position.Id
                 );
-                var totalVotesForPosition = await _voteRepository.GetTotalVotesByPositionAsync(
+
+                // Si no hay votos computados para este puesto en esta elección, no lo mostramos en el reporte
+                if (totalVotesForPosition == 0)
+                    continue;
+
+                var distribution = await _voteRepository.GetVotesDistributionAsync(
                     electionId,
                     position.Id
                 );

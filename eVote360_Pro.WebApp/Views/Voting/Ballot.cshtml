@@ -160,6 +160,22 @@
     <script>
         const ballotData = @Html.Raw(ballotJson);
         const positions = ballotData.positions;
+        
+        // Garantizamos que cada puesto tenga la opción explícita de "Voto en Blanco"
+        positions.forEach(p => {
+            if (!p.options.some(o => o.candidateId === null)) {
+                p.options.push({
+                    candidateId: null,
+                    candidateName: 'Voto en Blanco',
+                    partyId: null,
+                    partyName: 'Ninguno',
+                    partyAcronym: 'N/A',
+                    photoUrl: '',
+                    partyLogoUrl: ''
+                });
+            }
+        });
+
         let currentStep = 0;
         let selections = {}; // { positionId: { candidateId: x, partyId: y } }
 
@@ -263,11 +279,9 @@
                             </button>
                         ` : ''}
                         
-                        ${selections[position.positionId] !== undefined ? `
-                            <button type="button" onclick="nextStep()" class="flex items-center gap-2 px-8 py-3 text-sm font-black text-white bg-gray-900 hover:bg-blue-600 rounded-2xl transition-all shadow-lg hover:shadow-blue-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer">
-                                Siguiente <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                            </button>
-                        ` : ''}
+                        <button type="button" onclick="nextStep()" class="flex items-center gap-2 px-8 py-3 text-sm font-black transition-all shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selections[position.positionId] !== undefined ? 'text-white bg-gray-900 hover:bg-blue-600 hover:shadow-blue-200' : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 hover:shadow-gray-200'} rounded-2xl">
+                            ${selections[position.positionId] !== undefined ? 'Siguiente' : 'Omitir Puesto'} <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
             `;
@@ -384,6 +398,13 @@
         }
 
         window.nextStep = function() {
+            if (selections[positions[currentStep].positionId] === undefined) {
+                selections[positions[currentStep].positionId] = {
+                    positionId: positions[currentStep].positionId,
+                    candidateId: null,
+                    partyId: null
+                };
+            }
             currentStep++;
             renderStep(currentStep);
         }
