@@ -1,25 +1,67 @@
-﻿@model ErrorViewModel
+@model eVote360_Pro.Application.ViewModels.ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Error del Sistema";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<!-- Contenedor para centrar la Card en el espacio disponible del main -->
+<div class="flex items-center justify-center min-h-[70vh] py-8 page-entry">
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
+    <!-- Card de Error Central -->
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+        <!-- Header del Error (Acento Rojo Suave) -->
+        <div class="bg-red-50/80 px-6 py-4 border-b border-red-100 flex items-center gap-3">
+            <div class="p-2 bg-red-100 rounded-lg text-red-600">
+                <i data-lucide="triangle-alert" class="w-6 h-6"></i>
+            </div>
+            <h4 class="text-lg font-bold text-red-800 tracking-tight">@Model.ErrorTitle</h4>
+        </div>
+
+        <!-- Cuerpo de la Card -->
+        <div class="p-8 text-center flex flex-col items-center">
+
+            <!-- Status Code Gigante y Sutil -->
+            <h1 class="text-8xl font-black text-gray-100 tracking-tighter mb-2 select-none">
+                @Model.StatusCode
+            </h1>
+
+            <!-- Mensaje de Error -->
+            <h5 class="text-xl font-medium text-gray-800 mb-8 max-w-lg">
+                @Model.ErrorMessage
+            </h5>
+
+            <!-- Renderizado Condicional del Request ID -->
+            @if (Model.ShowRequestId)
+            {
+                <div class="w-full bg-gray-50 rounded-xl p-5 border border-gray-200 text-left mb-10 flex items-start gap-4">
+                    <div class="mt-1 text-gray-400">
+                        <i data-lucide="terminal" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <strong class="block text-sm font-semibold text-gray-700 mb-1">Identificador de Soporte (Request ID):</strong>
+                        <code class="inline-block bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-mono font-medium mb-2 shadow-sm">
+                            @Model.RequestId
+                        </code>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            Proporcione este código al administrador del sistema si el problema persiste. Este identificador nos ayudará a rastrear el error exacto en los registros de auditoría.
+                        </p>
+                    </div>
+                </div>
+            }
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col-reverse sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
+                <a asp-controller="Home" asp-action="Index"
+                   class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium text-sm rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 hover-scale">
+                    <i data-lucide="home" class="w-4 h-4"></i> Volver al Inicio
+                </a>
+
+                <button onclick="history.back()"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium text-sm rounded-lg hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover-scale">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Regresar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

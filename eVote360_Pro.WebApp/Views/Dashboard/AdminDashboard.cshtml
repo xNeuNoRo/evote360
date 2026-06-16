@@ -1,0 +1,203 @@
+@model eVote360_Pro.Application.Interfaces.Services.DashboardStatisticsResponse
+@{
+    ViewData["Title"] = "Panel de Control Administrador";
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Inicio", "Index", "Dashboard"),
+        ("Panel Administrador", null, null)
+    };
+}
+
+@{
+    var reportData = ViewBag.ReportData as List<eVote360_Pro.Application.DTOs.Dashboard.Responses.ElectionSummaryResponse>;
+    int selectedYear = ViewBag.SelectedYear ?? DateTime.Now.Year;
+    int currentYear = DateTime.Now.Year;
+}
+
+<div class="mb-8">
+    <h1 class="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+        <i data-lucide="layout-dashboard" class="w-8 h-8 text-blue-600"></i>
+        Resumen del Sistema
+    </h1>
+    <p class="text-sm text-gray-500 mt-2 font-medium">Estadísticas generales de la plataforma eVote360 Pro.</p>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ActiveElectionName))
+{
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
+        <div class="xl:col-span-2 flex flex-col gap-6">
+            <div class="mb-8 bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-white/20 text-white uppercase tracking-wider mb-3">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse pulse-node"></span>
+                            Elección Activa
+                        </span>
+                        <h2 class="text-2xl font-black tracking-tight">@Model.ActiveElectionName</h2>
+                        <p class="text-blue-100 mt-1 text-sm font-medium">El proceso de votación está abierto actualmente.</p>
+                    </div>
+                    <div class="flex items-center gap-4 bg-black/20 px-6 py-4 rounded-xl backdrop-blur-sm border border-white/10">
+                        <div class="p-3 bg-white/10 rounded-lg text-emerald-400">
+                            <i data-lucide="users" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-blue-100 uppercase tracking-wider font-bold mb-0.5">Votos Emitidos</div>
+                            <div class="text-3xl font-black tracking-tight">@Model.VoterParticipationCount.ToString("N0")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <i data-lucide="users-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Padrón Electoral</h3>
+                        <p class="text-3xl font-black text-gray-900">@Model.TotalCitizens.ToString("N0")</p>
+                        <p class="text-xs text-gray-400 mt-1">Ciudadanos registrados</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="flag" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Partidos Políticos</h3>
+                        <p class="text-3xl font-black text-gray-900">@Model.TotalParties.ToString("N0")</p>
+                        <p class="text-xs text-gray-400 mt-1">Organizaciones registradas</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                    <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                        <i data-lucide="archive" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Elecciones Históricas</h3>
+                        <p class="text-3xl font-black text-gray-900">@Model.TotalElections.ToString("N0")</p>
+                        <p class="text-xs text-gray-400 mt-1">Procesos en el sistema</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="xl:col-span-1">
+            <partial name="_DashboardResumenPartial" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="flex flex-col gap-8 mb-8">
+        <div class="w-full">
+            <partial name="_DashboardResumenPartial" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i data-lucide="users-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Padrón Electoral</h3>
+                    <p class="text-3xl font-black text-gray-900">@Model.TotalCitizens.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Ciudadanos registrados</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="flag" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Partidos Políticos</h3>
+                    <p class="text-3xl font-black text-gray-900">@Model.TotalParties.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Organizaciones registradas</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4 hover-scale">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                    <i data-lucide="archive" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Elecciones Históricas</h3>
+                    <p class="text-3xl font-black text-gray-900">@Model.TotalElections.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Procesos en el sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Últimos Partidos -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="flag" class="w-5 h-5 text-gray-400"></i>
+                Partidos Recientes
+            </h3>
+            <a asp-controller="PoliticalParty" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Ver todos</a>
+        </div>
+        @if (Model.RecentParties.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var party in Model.RecentParties)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <img src="@party.LogoPath" class="w-10 h-10 rounded-full border border-gray-200 bg-white object-cover" onerror="this.onerror=null; this.src='/uploads/parties/default.png';" />
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@party.Name</p>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">@party.Acronym</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No hay partidos registrados</p>
+            </div>
+        }
+    </div>
+
+    <!-- Últimos Ciudadanos -->
+    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-gray-400"></i>
+                Ciudadanos Recientes
+            </h3>
+            <a asp-controller="Citizen" asp-action="Index" class="text-sm font-bold text-blue-600 hover:text-blue-700">Ver padrón</a>
+        </div>
+        @if (Model.RecentCitizens.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var citizen in Model.RecentCitizens)
+                {
+                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                            @citizen.FullName.Substring(0,1)
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-black text-gray-900 line-clamp-1">@citizen.FullName</p>
+                            <p class="text-xs font-medium text-gray-500">Cédula: <span class="font-bold text-gray-900">@citizen.IdentityDocument</span></p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8 text-gray-400">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-sm font-medium">No hay ciudadanos en el padrón</p>
+            </div>
+        }
+    </div>
+</div>
+
+

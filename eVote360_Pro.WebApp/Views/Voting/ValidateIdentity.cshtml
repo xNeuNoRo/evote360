@@ -1,0 +1,88 @@
+@using eVote360_Pro.Application.DTOs.Voting.Requests
+@model ValidateElectorRequest
+@{
+    Layout = "_VoterLayout";
+    ViewData["Title"] = "Validación de Identidad OCR";
+}
+
+<div class="max-w-xl mx-auto">
+    <div class="text-center mb-10">
+        <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">Validación Biometríca</h1>
+        <p class="text-gray-500 font-medium">Sube una fotografía clara de la parte frontal de tu documento para validar tu identidad mediante Inteligencia Artificial.</p>
+    </div>
+
+    <form asp-action="ValidateIdentity" method="post" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-6 relative overflow-hidden">
+        
+        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-blue-50 rounded-full blur-2xl"></div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold flex items-start gap-3 relative z-10">
+                <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                <div>
+                    <div asp-validation-summary="All" class="mt-1"></div>
+                </div>
+            </div>
+        }
+
+        <input type="hidden" asp-for="IdentityDocument" />
+
+        <!-- Parte Delantera -->
+        <div class="relative z-10">
+            <label class="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Imagen de tu Documento</label>
+            
+            <div class="relative group cursor-pointer">
+                <input asp-for="IdCardImage" type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="frontImageInput" required />
+                <div class="w-full border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center group-hover:border-blue-500 group-hover:bg-blue-50 transition-colors" id="frontImageDropzone">
+                    <img id="frontImagePreview" class="hidden mx-auto h-32 object-cover rounded-xl mb-4 shadow-sm" />
+                    <div id="frontImagePlaceholder">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="scan-face" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-bold text-gray-900">Subir imagen</p>
+                        <p class="text-xs font-medium text-gray-500 mt-1">Soporta JPG, PNG (Max 5MB)</p>
+                    </div>
+                </div>
+            </div>
+            <span asp-validation-for="IdCardImage" class="text-red-500 text-xs font-bold mt-1 block"></span>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-lg transition-all shadow-xl shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 cursor-pointer flex items-center justify-center gap-2 group mt-8 relative z-10">
+            Validar identidad
+            <i data-lucide="fingerprint" class="w-5 h-5"></i>
+        </button>
+        
+        <div class="mt-4 text-center relative z-10">
+             <a asp-action="Index" class="text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Volver atrás</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image Preview
+            const frontInput = document.getElementById('frontImageInput');
+            const frontPreview = document.getElementById('frontImagePreview');
+            const frontPlaceholder = document.getElementById('frontImagePlaceholder');
+
+            if (frontInput) {
+                frontInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            frontPreview.src = e.target.result;
+                            frontPreview.classList.remove('hidden');
+                            frontPlaceholder.classList.add('hidden');
+                        }
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        frontPreview.classList.add('hidden');
+                        frontPlaceholder.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+}

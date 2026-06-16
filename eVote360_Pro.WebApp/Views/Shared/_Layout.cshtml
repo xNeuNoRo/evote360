@@ -1,50 +1,758 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using eVote360_Pro.Application.Interfaces.Services
+@inject ICurrentUserService CurrentUser
+<!DOCTYPE html>
+<html lang="es">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - eVote360_Pro.WebApp</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - eVote360 Pro</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
+    <meta name="view-transition" content="same-origin" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/eVote360_Pro.WebApp.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/transitions.css" asp-append-version="true" />
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="alternate icon" type="image/png" href="~/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Premium Page Entry Animation */
+        .page-entry {
+            animation: fancyFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, transform, filter;
+        }
+
+        @@keyframes fancyFadeIn {
+            0% { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.98); 
+                filter: blur(4px); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+                filter: blur(0); 
+            }
+        }
+
+        /* Luxury Hover & Interaction States */
+        .hover-scale {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform, box-shadow;
+        }
+
+        .hover-scale:hover { 
+            transform: translateY(-2px) scale(1.02); 
+            box-shadow: 0 12px 20px -8px rgba(79, 70, 229, 0.3), 0 4px 6px -4px rgba(79, 70, 229, 0.2);
+        }
+
+        .hover-scale:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 2px 4px -2px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Sidebar MASTER Fluid Dynamics */
+        #sidebar {
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.3, 1);
+            width: 17rem; /* w-68 default */
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #f3f4f6;
+            z-index: 40;
+        }
+
+        #sidebar.collapsed {
+            width: 5rem; /* Exact 80px for better breathing room */
+        }
+
+        /* Nav Container Reset */
+        #sidebar nav {
+            overflow-x: hidden;
+            overflow-y: auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        #sidebar.collapsed nav {
+            overflow: visible !important; /* Allow tooltips outside */
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        /* Icon Toggle Logic via CSS */
+        #sidebar.collapsed .icon-close,
+        #sidebar:not(.collapsed) .icon-open {
+            display: none !important;
+        }
+
+        /* Visibility Controls */
+        #sidebar.collapsed .sidebar-text, 
+        #sidebar.collapsed .sidebar-header-text,
+        #sidebar.collapsed .sidebar-category-label,
+        #sidebar.collapsed .sidebar-footer-content {
+            display: none !important;
+        }
+
+        /* Header Precision when Collapsed */
+        #sidebar.collapsed .h-16 {
+            padding: 0 !important;
+            justify-content: center;
+        }
+
+        /* Nav Item Precision - PERFECT CENTERING */
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            margin: 0.125rem 0.75rem;
+            border-radius: 12px;
+        }
+
+        #sidebar.collapsed .nav-item {
+            justify-content: center;
+            width: 3.5rem; /* 56px */
+            height: 3.5rem;
+            margin: 0.25rem auto !important; /* AUTO MARGIN FOR MATHEMATICAL CENTERING */
+            padding: 0 !important;
+            border-right-width: 0 !important;
+        }
+
+        /* Active State: THE LUXURY HIGHLIGHT */
+        #sidebar.collapsed .nav-item.active {
+            background-color: #4f46e5 !important;
+            color: white !important;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.35);
+        }
+
+        #sidebar.collapsed .nav-item.active i {
+            color: white !important;
+            margin: 0 !important;
+            transform: scale(1.1);
+        }
+
+        /* Sidebar Section Dividers */
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+
+        #sidebar.collapsed .sidebar-section {
+            margin-bottom: 0.5rem !important;
+        }
+
+        /* Custom Tooltips */
+        [data-sidebar-tooltip] {
+            position: relative;
+        }
+
+        #sidebar.collapsed [data-sidebar-tooltip]::after {
+            content: attr(data-sidebar-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 1.25rem;
+            padding: 0.6rem 0.85rem;
+            background: #111827;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 800;
+            border-radius: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 100;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        #sidebar.collapsed [data-sidebar-tooltip]:hover::after {
+            opacity: 1;
+            margin-left: 0.85rem;
+        }
+
+        /* Status Node: Original Sidebar Footer */
+        .status-node {
+            transition: all 0.3s ease;
+        }
+
+        #sidebar.collapsed .status-node {
+            justify-content: center;
+            padding: 0.5rem !important;
+        }
+
+        .cursor-pointer { cursor: pointer !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    </style>
+    <script>
+        // Init Dark Mode ASAP to prevent FOUC. Default is Light Mode.
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">eVote360_Pro.WebApp</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+
+@{
+    string currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+    string currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+
+    string GetActiveClasses(string targetController, string? targetAction = null)
+    {
+        bool isActive = string.Equals(currentController, targetController, StringComparison.OrdinalIgnoreCase);
+        if (targetAction != null) isActive = isActive && string.Equals(currentAction, targetAction, StringComparison.OrdinalIgnoreCase);
+
+        // Uso de índigo para diferenciarlo de ImportCost (blue) pero mantener la formalidad
+        return isActive
+            ? "active nav-item flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold border-r-4 border-blue-600 transition-all shadow-sm shadow-blue-100/50"
+            : "nav-item flex items-center gap-3 px-3 py-2 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-all";
+    }
+}
+
+<body class="bg-gray-50 text-gray-800 font-sans antialiased overflow-hidden selection:bg-blue-100 selection:text-blue-900">
+
+    <div class="flex h-screen w-full relative overflow-hidden">
+
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-gray-900/40 z-20 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
+
+        <aside id="sidebar" style="view-transition-name: app-sidebar;" class="fixed inset-y-0 left-0 bg-white shrink-0 flex flex-col z-30 transform -translate-x-full md:relative md:translate-x-0 transition-all duration-300 shadow-sm">
+
+            @* Header Section *@
+            <div class="h-16 flex gap-1 items-center justify-between px-6 border-b border-gray-200 shrink-0 overflow-hidden">
+                <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity">
+                    <div class="bg-blue-600 p-1.5 rounded-lg text-white shadow-lg shadow-blue-200">
+                        <i data-lucide="vote" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-lg font-black text-gray-900 tracking-tighter whitespace-nowrap sidebar-header-text">eVote360<span class="text-blue-600">Pro</span></span>
+                </a>
+                <button id="collapse-sidebar-btn" class="hidden md:flex text-gray-400 hover:text-blue-600 p-1.5 rounded-xl hover:bg-blue-50 transition-all cursor-pointer">
+                    <i data-lucide="panel-left-close" id="collapse-icon" class="w-5 h-5 icon-close"></i>
+                    <i data-lucide="panel-left-open" class="w-5 h-5 icon-open"></i>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <button id="close-sidebar-btn" class="md:hidden text-gray-500 hover:bg-gray-100 p-2 rounded-xl cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            @* Main Navigation *@
+            <nav class="flex-1 py-4 px-3 space-y-4 custom-scrollbar">
+
+                @if (CurrentUser.Role == eVote360_Pro.Domain.Common.SystemRoles.Administrator)
+                {
+                    <div class="sidebar-section">
+                        <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Gestión Electoral</p>
+                        <div class="space-y-1">
+                            <a asp-controller="Dashboard" asp-action="Index" class="@GetActiveClasses("Dashboard")" data-sidebar-tooltip="Panel">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Dashboard</span>
+                            </a>
+                            <a asp-controller="Election" asp-action="Index" class="@GetActiveClasses("Election")" data-sidebar-tooltip="Elecciones">
+                                <i data-lucide="calendar-check-2" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Elecciones</span>
+                            </a>
+                            <a asp-controller="Result" asp-action="Index" class="@GetActiveClasses("Result")" data-sidebar-tooltip="Resultados">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Resultados en Vivo</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Catálogos</p>
+                        <div class="space-y-1">
+                            <a asp-controller="Citizen" asp-action="Index" class="@GetActiveClasses("Citizen")" data-sidebar-tooltip="Ciudadanos">
+                                <i data-lucide="users" class="w-5 h-5 shrink-0"></i>
+                                <span class="sidebar-text text-sm">Ciudadanos</span>
+                            </a>
+                            <a asp-controller="PoliticalParty" asp-action="Index" class="@GetActiveClasses("PoliticalParty")" data-sidebar-tooltip="Partidos">
+                                <i data-lucide="flag" class="w-5 h-5 shrink-0"></i>
+                                <span class="sidebar-text text-sm">Partidos Políticos</span>
+                            </a>
+                            <a asp-controller="ElectivePosition" asp-action="Index" class="@GetActiveClasses("ElectivePosition")" data-sidebar-tooltip="Puestos">
+                                <i data-lucide="award" class="w-5 h-5 shrink-0"></i>
+                                <span class="sidebar-text text-sm">Puestos Electivos</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Seguridad</p>
+                        <div class="space-y-1">
+                            <a asp-controller="User" asp-action="Index" class="@GetActiveClasses("User")" data-sidebar-tooltip="Usuarios">
+                                <i data-lucide="shield-check" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Usuarios / Roles</span>
+                            </a>
+                            <a asp-controller="Assignment" asp-action="AssignLeader" class="@GetActiveClasses("Assignment")" data-sidebar-tooltip="Asignar Dirigentes">
+                                <i data-lucide="link" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Asignar Dirigentes</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+                else if (CurrentUser.Role == eVote360_Pro.Domain.Common.SystemRoles.PoliticalLeader)
+                {
+                    <div class="sidebar-section">
+                        <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Mi Partido</p>
+                        <div class="space-y-1">
+                            <a asp-controller="Dashboard" asp-action="Index" class="@GetActiveClasses("Dashboard")" data-sidebar-tooltip="Panel">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Dashboard</span>
+                            </a>
+                            <a asp-controller="Candidate" asp-action="Index" class="@GetActiveClasses("Candidate")" data-sidebar-tooltip="Candidatos">
+                                <i data-lucide="users" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Mis Candidatos</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Operaciones Políticas</p>
+                        <div class="space-y-1">
+                            <a asp-controller="CandidatePostAssignment" asp-action="Index" class="@GetActiveClasses("CandidatePostAssignment")" data-sidebar-tooltip="Boletas">
+                                <i data-lucide="clipboard-list" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Armar Boletas</span>
+                            </a>
+                            <a asp-controller="PoliticalAlliance" asp-action="Index" class="@GetActiveClasses("PoliticalAlliance")" data-sidebar-tooltip="Alianzas">
+                                <i data-lucide="handshake" class="w-5 h-5 shrink-0"></i> 
+                                <span class="sidebar-text text-sm">Alianzas Políticas</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <div class="sidebar-section">
+                    <p class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 sidebar-category-label">Sistema</p>
+                    <div class="space-y-1">
+                        <button id="dark-mode-toggle" class="w-full nav-item flex items-center gap-3 px-3 py-2 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-all cursor-pointer" data-sidebar-tooltip="Interfaz">
+                            <i data-lucide="moon" id="dark-mode-icon" class="w-5 h-5 shrink-0 icon-spin-transition"></i> 
+                            <span class="sidebar-text text-sm" id="dark-mode-text">Modo Oscuro</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            @* Sidebar Footer: Neural Status Node *@
+            <div class="p-4 border-t border-gray-50 shrink-0 mt-auto bg-gray-50/30">
+                <div class="status-node flex items-center gap-3 px-3 py-2 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-md group/status">
+                    <div class="relative flex items-center justify-center shrink-0">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+                        <div class="absolute w-5 h-5 bg-blue-500/20 rounded-full animate-ping"></div>
+                    </div>
+                    <div class="sidebar-footer-content overflow-hidden">
+                        <p class="text-[10px] font-black text-gray-900 tracking-tighter uppercase leading-none">eVote360 Pro</p>
+                        <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none mt-1.5 group-hover/status:text-blue-500 transition-colors">Sistema Seguro v2.0</p>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </aside>
+
+        @* Main Content Area *@
+        <div class="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+
+            <header style="view-transition-name: app-header;" class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-10 shrink-0 shadow-sm/30">
+                
+                @* Left: Mobile Menu & Breadcrumbs *@
+                <div class="flex items-center gap-4">
+                    <button id="open-sidebar-btn" class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    
+                    <nav class="hidden md:flex px-4 py-2 bg-gray-50/70 border border-gray-100 rounded-2xl backdrop-blur-md shadow-sm" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center space-x-2">
+                            <li class="inline-flex items-center">
+                                <a asp-controller="Dashboard" asp-action="Index" class="inline-flex items-center text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
+                                    <i data-lucide="home" class="w-3.5 h-3.5 mr-2"></i>
+                                    Inicio
+                                </a>
+                            </li>
+                            @{
+                                var bc3 = ViewData["Breadcrumbs"] as IEnumerable<(string Text, string? Action, string? Controller)>;
+                                var bc4 = ViewData["Breadcrumbs"] as IEnumerable<(string Text, string? Action, string? Controller, object? RouteId)>;
+
+                                if (bc3 != null || bc4 != null) {
+                                    var items = bc3 != null 
+                                        ? bc3.Select(x => (x.Text, x.Action, x.Controller, (object?)null)) 
+                                        : bc4!;
+
+                                    foreach (var item in items) {
+                                        <li>
+                                            <div class="flex items-center">
+                                                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                                                @if (item.Action != null && item.Controller != null) {
+                                                    <a asp-controller="@item.Controller" asp-action="@item.Action" asp-route-id="@item.Item4" class="ml-1 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors">@item.Text</a>
+                                                } else {
+                                                    <span class="ml-1 text-xs font-black text-gray-900 tracking-tighter">@item.Text</span>
+                                                }
+                                            </div>
+                                        </li>
+                                    }
+                                } else {
+                                    <li>
+                                        <div class="flex items-center">
+                                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                                            <span class="ml-1 text-xs font-black text-gray-900 tracking-tighter">@ViewData["Title"]</span>
+                                        </div>
+                                    </li>
+                                }
+                            }
+                        </ol>
+                    </nav>
+                </div>
+
+                @* Right: User Profile *@
+                <div class="relative">
+                    <button id="user-menu-btn" class="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 py-2 px-2 rounded-2xl transition-all cursor-pointer group">
+                        <div class="hidden sm:flex flex-col items-end">
+                            <span class="text-sm font-black text-gray-900 tracking-tight leading-tight">@(CurrentUser.FullName ?? "Invitado")</span>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-tight">@(CurrentUser.Role ?? "Sin Sesión")</span>
+                        </div>
+                        <div class="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xs border border-blue-700 shadow-lg shadow-blue-100 group-hover:scale-110 transition-transform">
+                            @(string.IsNullOrEmpty(CurrentUser.FullName) ? "U" : CurrentUser.FullName.Substring(0, 1).ToUpper())
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors"></i>
+                    </button>
+
+                    @* Dropdown Easter Egg *@
+                    <div id="user-dropdown" class="absolute right-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 z-50 hidden animate__animated animate__fadeInUp animate__faster">
+                        <div class="px-5 py-3 border-b border-gray-50 mb-2">
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Equipo de Desarrollo</p>
+                        </div>
+
+                        <div class="px-2 space-y-1">
+                            @* Lead *@
+                            <a href="https://github.com/xNeuNoRo" target="_blank" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-blue-50 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-100">AM</div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-black text-gray-900 tracking-tight">Angel Gonzalez Muñoz</span>
+                                    <span class="block text-[9px] text-blue-600 font-black uppercase tracking-widest">Lead Developer</span>
+                                </div>
+                                <i data-lucide="github" class="w-4 h-4 text-gray-300 group-hover:text-blue-600 transition-colors"></i>
+                            </a>
+
+                            @* Isaias *@
+                            <a href="https://github.com/IsaiasMorillo" target="_blank" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-emerald-50 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-100">IF</div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-black text-gray-900 tracking-tight">Isaias Jose Morillo F.</span>
+                                    <span class="block text-[9px] text-emerald-600 font-black uppercase tracking-widest">Software Developer</span>
+                                </div>
+                                <i data-lucide="github" class="w-4 h-4 text-gray-300 group-hover:text-emerald-600 transition-colors"></i>
+                            </a>
+
+                            @* Engel *@
+                            <a href="https://github.com/notengel" target="_blank" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-violet-50 transition-all group">
+                                <div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-violet-100">AS</div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-black text-gray-900 tracking-tight">Engel Orlando Acosta D.</span>
+                                    <span class="block text-[9px] text-violet-600 font-black uppercase tracking-widest">Software Developer</span>
+                                </div>
+                                <i data-lucide="github" class="w-4 h-4 text-gray-300 group-hover:text-violet-600 transition-colors"></i>
+                            </a>
+
+                            <div class="h-px bg-gray-100 my-3 mx-3"></div>
+
+                            @* Profesor Guest *@
+                            <div class="flex items-center gap-3 p-3 rounded-2xl hover:bg-amber-50 transition-all group cursor-default">
+                                <div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-amber-100">LT</div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-black text-gray-900 tracking-tight">Leonardo Enrique Tavarez B.</span>
+                                    <span class="block text-[9px] text-amber-600 font-black uppercase tracking-widest">Project Master / Esclavizador</span>
+                                </div>
+                                <div class="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
+                                    <i data-lucide="crown" class="w-3.5 h-3.5 fill-amber-600"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="h-px bg-gray-100 my-3 mx-3"></div>
+                            
+                            @* Logout *@
+                            <a asp-controller="Auth" asp-action="Logout" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-red-50 transition-all group cursor-pointer">
+                                <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600 text-xs font-black">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-black text-red-600 tracking-tight">Cerrar Sesión</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 custom-scrollbar">
+                <div style="view-transition-name: main-content;" class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto page-entry">
+                    @RenderBody()
+                </div>
+            </main>
+
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - eVote360_Pro.WebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        // Global SweetAlert2 "Luxury" Settings
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        // Set default animations for all standard Swal.fire calls globally
+        const originalSwalFire = Swal.fire;
+        Swal.fire = function() {
+            if (arguments.length > 0 && typeof arguments[0] === 'object') {
+                if (!arguments[0].showClass) {
+                    arguments[0].showClass = { popup: 'animate__animated animate__zoomIn animate__faster' };
+                }
+                if (!arguments[0].hideClass) {
+                    arguments[0].hideClass = { popup: 'animate__animated animate__zoomOut animate__faster' };
+                }
+            }
+            return originalSwalFire.apply(this, arguments);
+        };
+
+        lucide.createIcons();
+
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        const openBtn = document.getElementById('open-sidebar-btn');
+        const closeBtn = document.getElementById('close-sidebar-btn');
+        const collapseBtn = document.getElementById('collapse-sidebar-btn');
+        const collapseIcon = document.getElementById('collapse-icon');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
+        function toggleCollapse() {
+            sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            
+            if (collapseIcon) {
+                collapseIcon.setAttribute('data-lucide', isCollapsed ? 'panel-left-open' : 'panel-left-close');
+                lucide.createIcons();
+            }
+            
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+        }
+
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+            if (collapseIcon) {
+                collapseIcon.setAttribute('data-lucide', 'panel-left-open');
+                lucide.createIcons();
+            }
+        }
+
+        if (openBtn) openBtn.addEventListener('click', toggleSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+        if (backdrop) backdrop.addEventListener('click', toggleSidebar);
+        if (collapseBtn) collapseBtn.addEventListener('click', toggleCollapse);
+
+        const userBtn = document.getElementById('user-menu-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        if (userBtn && userDropdown) {
+            userBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!userBtn.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Dark Mode Logic with View Transition API
+        const darkModeBtn = document.getElementById('dark-mode-toggle');
+        const darkModeText = document.getElementById('dark-mode-text');
+
+        function updateDarkModeUI(isDark) {
+            if (darkModeBtn) {
+                const existingIcon = document.getElementById('dark-mode-icon');
+                if (existingIcon) {
+                    existingIcon.remove();
+                }
+
+                const newIcon = document.createElement('i');
+                newIcon.id = 'dark-mode-icon';
+                newIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                
+                newIcon.className = 'w-5 h-5 shrink-0 icon-spin-transition';
+                if (isDark) {
+                    newIcon.classList.add('icon-spin-dark');
+                }
+
+                darkModeBtn.insertBefore(newIcon, darkModeBtn.firstChild);
+                lucide.createIcons();
+            }
+
+            if (darkModeText) {
+                darkModeText.textContent = isDark ? 'Modo Claro' : 'Modo Oscuro';
+            }
+        }
+
+        updateDarkModeUI(document.documentElement.classList.contains('dark'));
+
+        if (darkModeBtn) {
+            darkModeBtn.addEventListener('click', (e) => {
+                const isDark = !document.documentElement.classList.contains('dark');
+                
+                if (!document.startViewTransition) {
+                    document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    updateDarkModeUI(isDark);
+                    return;
+                }
+
+                const x = e.clientX !== undefined ? e.clientX : innerWidth / 2;
+                const y = e.clientY !== undefined ? e.clientY : innerHeight / 2;
+                
+                const endRadius = Math.hypot(
+                    Math.max(x, innerWidth - x),
+                    Math.max(y, innerHeight - y)
+                );
+
+                // Strip inner view-transition names to prevent layout breaking
+                const elements = document.querySelectorAll('[style*="view-transition-name"]');
+                const originalStyles = new Map();
+                elements.forEach(el => {
+                    originalStyles.set(el, el.style.viewTransitionName);
+                    el.style.viewTransitionName = 'none';
+                });
+
+                document.documentElement.classList.add('dark-transitioning');
+
+                const style = document.createElement('style');
+                style.id = 'dynamic-view-transition';
+                style.innerHTML = `
+                    ::view-transition-old(root),
+                    ::view-transition-new(root) {
+                        animation: none !important;
+                        mix-blend-mode: normal !important;
+                    }
+                    html.dark::view-transition-old(root) {
+                        z-index: 1;
+                    }
+                    html.dark::view-transition-new(root) {
+                        z-index: 999;
+                        animation: circle-in 0.5s ease-out forwards !important;
+                    }
+                    html:not(.dark)::view-transition-old(root) {
+                        z-index: 999;
+                        animation: circle-out 0.5s ease-out forwards !important;
+                    }
+                    html:not(.dark)::view-transition-new(root) {
+                        z-index: 1;
+                    }
+                    @@keyframes circle-in {
+                        from { clip-path: circle(0px at ${x}px ${y}px); }
+                        to { clip-path: circle(${endRadius}px at ${x}px ${y}px); }
+                    }
+                    @@keyframes circle-out {
+                        from { clip-path: circle(${endRadius}px at ${x}px ${y}px); }
+                        to { clip-path: circle(0px at ${x}px ${y}px); }
+                    }
+                `;
+                
+                const oldStyle = document.getElementById('dynamic-view-transition');
+                if (oldStyle) oldStyle.remove();
+                
+                document.head.appendChild(style);
+
+                const transition = document.startViewTransition(() => {
+                    document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    updateDarkModeUI(isDark);
+                });
+                
+                transition.finished.finally(() => {
+                    document.documentElement.classList.remove('dark-transitioning');
+                    elements.forEach(el => {
+                        el.style.viewTransitionName = originalStyles.get(el);
+                    });
+                    const styleToRemove = document.getElementById('dynamic-view-transition');
+                    if (styleToRemove) styleToRemove.remove();
+                });
+            });
+        }
+
+        // --- SweetAlert Trigger ---
+        @if (TempData["SweetAlertMessage"] != null)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                var alertType = '@TempData["SweetAlertType"]' || 'success';
+                var alertMessage = '@Html.Raw(TempData["SweetAlertMessage"]?.ToString()?.Replace("'", "\\'"))';
+                
+                setTimeout(() => {
+                    Toast.fire({
+                        icon: alertType,
+                        title: alertMessage
+                    });
+                }, 500);
+            });
+            </text>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                var alertMessage = '@Html.Raw(TempData["ErrorMessage"]?.ToString()?.Replace("'", "\\'"))';
+                
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acción Rechazada',
+                        text: alertMessage,
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#3b82f6',
+                        customClass: {
+                            confirmButton: 'px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95'
+                        }
+                    });
+                }, 500);
+            });
+            </text>
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,57 @@
+@model eVote360_Pro.Application.ViewModels.ElectivePositionViewModels.UpdateElectivePositionViewModel
+
+@{
+    ViewData["Title"] = "Editar Puesto Electivo";
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6 flex items-center gap-4">
+        <a asp-action="Index" class="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl font-black text-gray-900 tracking-tight">Editar Puesto</h1>
+            <p class="text-sm text-gray-500 font-medium">Modifica los datos del cargo existente.</p>
+        </div>
+    </div>
+
+    <div style="view-transition-name: card-edit-@Model.Id;" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+        <form asp-action="Edit" method="post" class="space-y-6">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="IsActive" />
+            
+            <div>
+                <label asp-for="Name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Nombre del Puesto</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                        <i data-lucide="tag" class="w-5 h-5"></i>
+                    </div>
+                    <input asp-for="Name" type="text" placeholder="Ej: Presidente" 
+                           class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none" />
+                </div>
+                <span asp-validation-for="Name" class="text-xs font-bold text-red-500 mt-2 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Description" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Descripción</label>
+                <textarea asp-for="Description" rows="4" placeholder="Describe brevemente las funciones de este cargo..."
+                          class="block w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none resize-none"></textarea>
+                <span asp-validation-for="Description" class="text-xs font-bold text-red-500 mt-2 block"></span>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-3">
+                <a asp-action="Index" class="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    Actualizar Puesto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

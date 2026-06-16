@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\eVote360_Pro.Domain\eVote360_Pro.Domain.csproj" />
+    <ProjectReference Include="..\eVote360_Pro.Shared\eVote360_Pro.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -11,6 +12,7 @@
     <PackageReference Include="Mapster.DependencyInjection" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.16" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.16" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -18,5 +20,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>
