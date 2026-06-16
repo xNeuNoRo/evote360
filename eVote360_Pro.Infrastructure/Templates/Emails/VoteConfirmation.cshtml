@@ -50,7 +50,7 @@
 
                 <div style="margin-top: 20px; border-top: 1px dashed #334155; padding-top: 20px;">
                     <span class="data-label" style="display: block; margin-bottom: 15px; font-size: 12px;">Resumen de selección:</span>
-                    @if (Model.Selections != null && Model.Selections.Any())
+                    @if (Model.Selections != null && Model.Selections.Count > 0)
                     {
                         foreach (var selection in Model.Selections)
                         {

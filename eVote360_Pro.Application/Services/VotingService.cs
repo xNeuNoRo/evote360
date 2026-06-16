@@ -13,6 +13,7 @@ using eVote360_Pro.Domain.Interfaces.Security;
 using eVote360_Pro.Domain.ValueObjects;
 using eVote360_Pro.Shared.Interfaces.Messaging;
 using eVote360_Pro.Shared.Interfaces.OCR;
+using Microsoft.Extensions.Logging;
 using eVote360_Pro.Shared.Interfaces.Storage;
 
 namespace eVote360_Pro.Application.Services
@@ -35,6 +36,7 @@ namespace eVote360_Pro.Application.Services
         private readonly IVerificationCodeGenerator _codeGenerator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly ILogger<VotingService> _logger;
 
         public VotingService(
             IElectionRepository electionRepository,
@@ -49,7 +51,8 @@ namespace eVote360_Pro.Application.Services
             IFileService fileService,
             IVerificationCodeGenerator codeGenerator,
             IUnitOfWork unitOfWork,
-            IDateTimeProvider dateTimeProvider
+            IDateTimeProvider dateTimeProvider,
+            ILogger<VotingService> logger
         )
         {
             _electionRepository = electionRepository;
@@ -65,6 +68,7 @@ namespace eVote360_Pro.Application.Services
             _codeGenerator = codeGenerator;
             _unitOfWork = unitOfWork;
             _dateTimeProvider = dateTimeProvider;
+            _logger = logger;
         }
 
         public async Task ValidateCitizenCanVoteAsync(string document)
@@ -380,6 +384,18 @@ namespace eVote360_Pro.Application.Services
                                 assignment.Party.Name
                             ));
                         }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Assignment not found for PositionId={PositionId}, CandidateId={CandidateId}, PartyId={PartyId}",
+                                selection.PositionId, selection.CandidateId, selection.PartyId
+                            );
+                            selectionModels.Add(new VoteSelectionModel(
+                                position.Name,
+                                "[Candidato no disponible]",
+                                "[Partido no disponible]"
+                            ));
+                        }
                     }
                     else
                     {
@@ -399,12 +415,20 @@ namespace eVote360_Pro.Application.Services
                     selectionModels
                 );
 
-                await _emailService.SendEmailAsync(
+                var emailSent = await _emailService.SendEmailAsync(
                     citizen.Email,
                     $"Comprobante de Votación - {election.Name}",
                     "VoteConfirmation",
                     confirmationModel
                 );
+
+                if (!emailSent)
+                {
+                    _logger.LogWarning(
+                        "Vote confirmation email failed to send to {Email} for Election={ElectionId}, Citizen={CitizenId}. Vote was already committed.",
+                        citizen.Email, request.ElectionId, request.CitizenId
+                    );
+                }
             }
             catch
             {
