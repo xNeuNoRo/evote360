@@ -9,6 +9,23 @@
 
 ---
 
+
+## The Dream Team
+
+El desarrollo de este sistema es el resultado de la colaboración técnica y la excelencia académica de:
+
+| Desarrollador | Rol | Matrícula | GitHub |
+| :--- | :--- | :--- | :--- |
+| **Angel Gonzalez Muñoz** | **Lead Developer** | 2025-1122 | [xNeuNoRo](https://github.com/xNeuNoRo) |
+| **Isaias Jose Morillo F.** | Software Developer | 2025-1242 | [IsaiasMorillo](https://github.com/IsaiasMorillo) |
+| **Engel Orlando Acosta D.** | Software Developer | 2025-0037 | [notengel](https://github.com/notengel) |
+
+### Profesor
+*   **Profesor:** Leonardo Enrique Tavarez Betances
+*   **Rol:** Project Master / Esclavizador (Authority & Architect)
+
+---
+
 ## 🌟 Funcionalidades Destacadas
 
 *   **🛡️ Seguridad Nivel Bancario:** Implementación estricta de **RBAC (Role Based Access Control)** y hashing de alta seguridad para la protección de datos sensibles.
