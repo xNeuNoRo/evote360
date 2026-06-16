@@ -22,5 +22,8 @@ namespace eVote360_Pro.Application.ViewModels.PoliticalPartyViewModels
         [Required(ErrorMessage = "El logo del partido es requerido.")]
         [Display(Name = "Logo del Partido")]
         public IFormFile LogoFile { get; set; } = null!;
+
+        [Display(Name = "Estado (Activo/Inactivo)")]
+        public bool IsActive { get; set; } = true;
     }
 }

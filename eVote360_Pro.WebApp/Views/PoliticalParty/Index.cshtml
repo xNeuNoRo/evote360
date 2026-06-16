@@ -1,0 +1,151 @@
+@model IEnumerable<eVote360_Pro.Application.DTOs.PoliticalParty.Responses.PoliticalPartyResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
+@{
+    ViewData["Title"] = "Partidos Políticos";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", "Index", "Dashboard"),
+        ("Partidos Políticos", null, null)
+    };
+}
+
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <i data-lucide="flag" class="w-6 h-6 text-blue-600"></i>
+            Partidos Políticos
+        </h1>
+        <p class="text-sm text-gray-500 mt-1 font-medium">Gestiona las agrupaciones políticas y sus identidades visuales.</p>
+    </div>
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-party;" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo Partido
+    </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Nuevo Partido (Bloqueado)
+        </button>
+    }
+</div>
+
+
+@if (isElectionActive)
+{
+    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl">
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+                <i data-lucide="alert-triangle" class="h-5 w-5 text-amber-500"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-bold text-amber-800">Mantenimiento Deshabilitado</h3>
+                <p class="text-sm text-amber-700 mt-1">
+                    Las opciones de creación y edición están deshabilitadas ya que hay una elección en proceso.
+                </p>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+            <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100 font-black tracking-wider">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Partido</th>
+                    <th scope="col" class="px-6 py-4">Descripción</th>
+                    <th scope="col" class="px-6 py-4 text-center">Estado</th>
+                    <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                                <i data-lucide="flag-off" class="w-8 h-8 text-gray-300"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-900 mb-1">No hay partidos registrados</h3>
+                            <p class="text-xs text-gray-500">Comienza agregando un nuevo partido político al sistema.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-blue-50/30 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                                        @if (!string.IsNullOrEmpty(item.LogoUrl))
+                                        {
+                                            <img src="@(item.LogoUrl.StartsWith("/") ? item.LogoUrl : "/" + item.LogoUrl)" alt="Logo @item.Acronym" class="w-full h-full object-contain p-1" />
+                                        }
+                                        else
+                                        {
+                                            <i data-lucide="image" class="w-5 h-5 text-gray-400"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-900">@item.Name</div>
+                                        <div class="text-xs font-black text-blue-600 mt-0.5 tracking-wider">@item.Acronym</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 max-w-xs truncate" title="@item.Description">
+                                @(string.IsNullOrEmpty(item.Description) ? "Sin descripción" : item.Description)
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if (item.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-600 uppercase tracking-wider border border-emerald-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-600 uppercase tracking-wider border border-red-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                        Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                @if (!isElectionActive)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" style="view-transition-name: card-party-@item.Id;" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="Editar">
+                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                    </a>
+                                    <form asp-action="ToggleStatus" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="activate" value="@(item.IsActive ? "false" : "true")" />
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-@(item.IsActive ? "red" : "emerald")-600 hover:bg-@(item.IsActive ? "red" : "emerald")-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="@(item.IsActive ? "Desactivar" : "Activar")">
+                                            <i data-lucide="@(item.IsActive ? "power-off" : "power")" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

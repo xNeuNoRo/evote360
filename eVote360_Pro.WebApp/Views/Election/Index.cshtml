@@ -1,0 +1,160 @@
+@using eVote360_Pro.Application.DTOs.Election.Responses
+@using eVote360_Pro.Domain.Enums
+@model IEnumerable<ElectionResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
+@{
+    ViewData["Title"] = "Elecciones";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Procesos", "Index", "Dashboard"),
+        ("Elecciones", null, null)
+    };
+}
+
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Elecciones</h1>
+        <p class="text-gray-500 text-sm mt-1 font-medium">Programa y controla el ciclo de vida de los procesos electorales.</p>
+    </div>
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-election;" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 cursor-pointer">
+        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+        Programar Elección
+    </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Programar Elección (Bloqueado)
+        </button>
+    }
+</div>
+
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-100">
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Proceso Electoral</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Fecha Programada</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-center">Estado</th>
+                    <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="py-12 px-6 text-center text-gray-400">
+                            <i data-lucide="archive-restore" class="w-12 h-12 mx-auto text-gray-200 mb-3"></i>
+                            <p class="text-sm font-bold text-gray-500">No hay procesos electorales registrados en el sistema</p>
+                        </td>
+                    </tr>
+                }
+                @foreach (var election in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full border border-gray-100 bg-blue-50 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
+                                    <i data-lucide="vote" class="w-5 h-5 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-gray-900 tracking-tight">@election.Name</p>
+                                    <p class="text-xs font-medium text-gray-500">Año @election.Year</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-gray-600 font-medium">
+                            @election.RealizationDate.ToString("dd/MM/yyyy")
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            @if (election.Status == ElectionStatus.Pending.ToString())
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    Pendiente
+                                </span>
+                            }
+                            else if (election.Status == ElectionStatus.Active.ToString())
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    En Curso
+                                </span>
+                            }
+                            else if (election.Status == ElectionStatus.Finished.ToString())
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                    Finalizada
+                                </span>
+                            }
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                @if (election.Status == ElectionStatus.Pending.ToString() && !isElectionActive)
+                                {
+                                    <form asp-action="Activate" method="post" class="inline confirm-form" data-message="¿Está seguro que desea ACTIVAR esta elección? Al hacerlo, se congelarán todas las configuraciones de partidos, boletas y candidatos.">
+                                        <input type="hidden" name="id" value="@election.Id" />
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors cursor-pointer" title="Activar Elección">
+                                            <i data-lucide="power" class="w-5 h-5"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else if (election.Status == ElectionStatus.Active.ToString())
+                                {
+                                    <form asp-action="Finish" method="post" class="inline confirm-form" data-message="¿Está seguro que desea FINALIZAR esta elección? Al hacerlo, se detendrá el proceso de votación y se publicarán los resultados oficiales.">
+                                        <input type="hidden" name="id" value="@election.Id" />
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer" title="Finalizar Elección">
+                                            <i data-lucide="stop-circle" class="w-5 h-5"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else if (election.Status == ElectionStatus.Finished.ToString() || (election.Status == ElectionStatus.Pending.ToString() && isElectionActive))
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción no disponible">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.confirm-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-message');
+                Swal.fire({
+                    title: 'Advertencia Crítica',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, Ejecutar',
+                    cancelButtonText: 'Cancelar',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 mx-2 cursor-pointer',
+                        cancelButton: 'px-5 py-2 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 mx-2 cursor-pointer',
+                        popup: 'rounded-3xl shadow-xl border border-gray-100'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
+        });
+    </script>
+}

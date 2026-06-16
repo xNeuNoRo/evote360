@@ -19,8 +19,7 @@ namespace eVote360_Pro.Application.ViewModels.CandidateViewModels
         [Display(Name = "Foto del Candidato")]
         public IFormFile PhotoFile { get; set; } = null!;
 
-        [Required(ErrorMessage = "El partido de origen es requerido.")]
         [Display(Name = "Partido de Origen")]
-        public int OriginalPartyId { get; set; }
+        public int? OriginalPartyId { get; set; }
     }
 }

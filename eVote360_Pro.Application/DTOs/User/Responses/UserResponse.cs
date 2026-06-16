@@ -5,6 +5,8 @@ namespace eVote360_Pro.Application.DTOs.User.Responses
     /// </summary>
     public record UserResponse(
         Guid Id,
+        string FirstName,
+        string LastName,
         string FullName,
         string Username,
         string Email,

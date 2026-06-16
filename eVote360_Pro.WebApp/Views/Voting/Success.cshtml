@@ -1,0 +1,25 @@
+@{
+    Layout = "_VoterLayout";
+    ViewData["Title"] = "Voto Registrado";
+}
+
+<div class="flex flex-col items-center justify-center py-20 text-center max-w-lg mx-auto page-entry">
+    <div class="relative w-32 h-32 mb-8">
+        <div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-75"></div>
+        <div class="relative w-full h-full bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center shadow-xl shadow-emerald-200">
+            <i data-lucide="check-circle-2" class="w-16 h-16 text-emerald-600"></i>
+        </div>
+    </div>
+    
+    <h1 class="text-4xl font-black text-gray-900 tracking-tight mb-4">¡Voto Registrado con Éxito!</h1>
+    
+    <p class="text-gray-500 font-medium leading-relaxed text-lg mb-8">
+        Tu elección ha sido cifrada y almacenada de forma anónima en nuestra base de datos.
+        Gracias por ejercer tu derecho ciudadano.
+    </p>
+
+    <a href="/" class="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+        Finalizar Proceso
+        <i data-lucide="door-open" class="w-5 h-5"></i>
+    </a>
+</div>

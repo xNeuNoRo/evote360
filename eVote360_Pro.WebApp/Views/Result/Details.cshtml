@@ -1,0 +1,332 @@
+@using eVote360_Pro.Application.DTOs.Voting.Responses
+@model ResultReportResponse
+@{
+    var ballotJson = System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+}
+
+<div style="view-transition-name: card-result-@Model.ElectionId;" class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
+    <div>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">@Model.ElectionName</h1>
+        <p class="text-gray-500 text-sm mt-1 font-medium">Resultados Oficiales del Escrutinio</p>
+    </div>
+    <div class="bg-blue-50 text-blue-700 px-5 py-3 rounded-2xl flex items-center gap-3">
+        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm">
+            <i data-lucide="users" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black uppercase tracking-wider opacity-70">Total Votantes</p>
+            <p class="text-xl font-black leading-none">@Model.TotalVoters.ToString("N0")</p>
+        </div>
+    </div>
+</div>
+
+@if (!Model.ResultsByPosition.Any())
+{
+    <div class="py-20 text-center">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <i data-lucide="inbox" class="w-10 h-10"></i>
+        </div>
+        <h3 class="text-xl font-black text-gray-900">No hay datos disponibles</h3>
+        <p class="text-gray-500 mt-2 font-medium">Aún no se han configurado puestos ni se han registrado votos para esta elección.</p>
+    </div>
+}
+else
+{
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
+        <!-- Sidebar Nieles Electivos -->
+        <div class="w-full lg:w-1/4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm sticky top-24">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Niveles Electivos</h3>
+            <div class="space-y-1">
+                @foreach (var pos in Model.ResultsByPosition)
+                {
+                    <button type="button" onclick="loadPositionData(@pos.PositionId)" id="btn-pos-@pos.PositionId"
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all text-left group
+                                   @(pos == Model.ResultsByPosition.First() ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50")">
+                        @pos.PositionName
+                        <i data-lucide="chevron-right" class="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Contenido de Resultados -->
+        <div class="w-full lg:w-3/4 space-y-8" id="resultContent">
+            <!-- JS Inyectará la gráfica y el ganador aquí -->
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const reportData = @Html.Raw(ballotJson);
+        const positions = reportData.resultsByPosition;
+        let resultChart = null;
+
+        function loadPositionData(positionId) {
+            // Actualizar UI del sidebar
+            document.querySelectorAll('[id^="btn-pos-"]').forEach(btn => {
+                btn.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all text-left group text-gray-600 hover:bg-gray-50";
+            });
+            const activeBtn = document.getElementById(`btn-pos-${positionId}`);
+            if(activeBtn) {
+                activeBtn.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all text-left group bg-blue-50 text-blue-700";
+            }
+
+            const pos = positions.find(p => p.positionId === positionId);
+            if(!pos) return;
+
+            const container = document.getElementById('resultContent');
+            
+            // Ordenar por votos
+            const sortedCandidates = [...pos.candidates].sort((a,b) => b.votesCount - a.votesCount);
+            const noneOption = sortedCandidates.find(c => c.candidateId === null) || null;
+            const realCandidates = sortedCandidates.filter(c => c.candidateId !== null);
+            const winner = sortedCandidates.length > 0 ? sortedCandidates[0] : null;
+
+            let winnerHtml = '';
+            if (pos.isTie) {
+                winnerHtml = `
+                    <div class="bg-amber-50 border border-amber-100 rounded-3xl p-6 flex items-start gap-4 animate__animated animate__fadeIn">
+                        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
+                            <i data-lucide="scale" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-amber-900">¡Empate Electoral!</h3>
+                            <p class="text-sm font-medium text-amber-700 mt-1">
+                                Existen múltiples candidatos con la misma cantidad máxima de votos (${winner.votesCount} votos). 
+                                Se requiere un proceso de desempate según la ley electoral.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (winner && winner.votesCount > 0) {
+                const isNone = winner.candidateId === null;
+                const winnerName = isNone ? "Ninguno (Voto en blanco)" : winner.candidateName;
+
+                winnerHtml = `
+                    <div class="bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl p-8 text-white shadow-xl shadow-emerald-500/20 relative overflow-hidden animate__animated animate__fadeIn">
+                        <div class="absolute inset-0 bg-[url('~/images/pattern.svg')] opacity-10"></div>
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center gap-5">
+                                ${!isNone && winner.photoUrl ? `
+                                    <img src="${winner.photoUrl}" class="w-20 h-20 rounded-full border-4 border-white/30 object-cover shadow-lg" onerror="this.onerror=null; this.src='/uploads/candidates/default.png';" />
+                                ` : `
+                                    <div class="w-20 h-20 bg-white/20 rounded-full border-4 border-white/30 flex items-center justify-center backdrop-blur-sm">
+                                        <i data-lucide="trophy" class="w-8 h-8 text-white"></i>
+                                    </div>
+                                `}
+                                <div>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-white text-emerald-700 uppercase tracking-widest mb-2">
+                                        ${isNone ? 'Voto Mayoritario' : 'Ganador Proyectado'}
+                                    </span>
+                                    <h3 class="text-2xl font-black tracking-tight leading-none">${winnerName}</h3>
+                                    ${!isNone ? `<p class="text-emerald-100 font-bold mt-1">${winner.partyName}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right hidden sm:block">
+                                <p class="text-[10px] font-black text-emerald-200 uppercase tracking-widest">Porcentaje</p>
+                                <p class="text-4xl font-black">${winner.percentage.toFixed(1)}%</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                winnerHtml = `
+                    <div class="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center text-gray-500 animate__animated animate__fadeIn">
+                        Aún no se han computado votos para este nivel electivo.
+                    </div>
+                `;
+            }
+
+            // Preparar Gráfica
+            const labels = pos.candidates.map(c => c.candidateId === null ? "Voto en Blanco" : c.candidateName);
+            const dataVotes = pos.candidates.map(c => c.votesCount);
+            
+            // Generar colores premium, gris fijo para Voto en Blanco
+            const palette = [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(14, 165, 233, 0.8)',
+                'rgba(168, 85, 247, 0.8)',
+            ];
+            const bgColors = pos.candidates.map((c, i) =>
+                c.candidateId === null ? 'rgba(148, 163, 184, 0.7)' : palette[i % palette.length]
+            );
+            const borderColors = bgColors.map(c => c.replace('0.8', '1').replace('0.7', '1'));
+
+            let mainContent = `
+                ${winnerHtml}
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 animate__animated animate__fadeIn">
+                    <!-- Bar Chart -->
+                    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-sm font-black text-gray-900 tracking-tight mb-6 flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-500"></i> Distribución de Votos
+                        </h4>
+                        <div class="relative w-full h-[280px]">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Pie Chart -->
+                    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="text-sm font-black text-gray-900 tracking-tight mb-6 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i> Proporción (%)
+                        </h4>
+                        <div class="relative w-full h-[280px] flex justify-center items-center">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de desglose (solo candidatos reales) -->
+                <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm mt-8 animate__animated animate__fadeIn animate__delay-1s">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/50 border-b border-gray-100">
+                                <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider">Candidato / Partido</th>
+                                <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Votos</th>
+                                <th class="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">%</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            ${realCandidates.map((c, index) => {
+                                const positionBadge = index === 0 && c.votesCount > 0 ? 
+                                    '<span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs font-black shadow-sm mr-3">1</span>' : 
+                                    `<span class="w-6 h-6 flex items-center justify-center text-xs font-bold text-gray-400 mr-3">${index + 1}</span>`;
+
+                                return `
+                                    <tr class="hover:bg-blue-50/30 transition-colors group">
+                                        <td class="py-4 px-6 flex items-center">
+                                            ${positionBadge}
+                                            ${c.photoUrl ? `
+                                                <img src="${c.photoUrl}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm mr-4" onerror="this.src='/uploads/candidates/default.png';" />
+                                            ` : `
+                                                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border-2 border-white shadow-sm mr-4">
+                                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                                </div>
+                                            `}
+                                            <div>
+                                                <p class="text-sm font-black text-gray-900 tracking-tight group-hover:text-blue-700 transition-colors">${c.candidateName}</p>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-gray-100 text-gray-600">${c.partyAcronym}</span>
+                                                    <p class="text-xs font-medium text-gray-500">${c.partyName}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-right align-middle">
+                                            <span class="text-base font-black text-gray-900">${c.votesCount.toLocaleString()}</span>
+                                        </td>
+                                        <td class="py-4 px-6 text-right align-middle">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <div class="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${c.percentage}%"></div>
+                                                </div>
+                                                <span class="inline-flex items-center w-14 justify-end text-sm font-bold text-gray-700">
+                                                    ${c.percentage.toFixed(1)}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                ${noneOption ? `
+                <!-- Tarjeta separada: Voto en Blanco -->
+                <div class="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-6 shadow-sm mt-4 animate__animated animate__fadeIn animate__delay-1s hover:bg-gray-50/50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border-2 border-gray-200">
+                                <i data-lucide="inbox" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-black bg-gray-200 text-gray-600 uppercase tracking-wider">Opción Válida</span>
+                                </div>
+                                <h4 class="text-lg font-black text-gray-900 mt-1">Voto en Blanco</h4>
+                                <p class="text-xs font-medium text-gray-500">Electores que optaron por no seleccionar ningún candidato</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-black text-gray-900">${noneOption.votesCount.toLocaleString()}</p>
+                            <p class="text-xs font-bold text-gray-400">votos</p>
+                            <p class="text-sm font-black text-gray-600 mt-1">${noneOption.percentage.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                    ${noneOption.votesCount > 0 ? `
+                    <div class="mt-4 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div class="bg-gray-400 h-2 rounded-full" style="width: ${noneOption.percentage}%"></div>
+                    </div>
+                    ` : ''}
+                </div>
+                ` : ''}
+            `;
+
+            container.innerHTML = mainContent;
+            lucide.createIcons();
+
+            // Render Charts
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votos',
+                        data: dataVotes,
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataVotes,
+                        backgroundColor: bgColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { family: "'Inter', sans-serif", weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        // Init with first position
+        if (positions && positions.length > 0) {
+            loadPositionData(positions[0].positionId);
+        }
+    </script>
+}

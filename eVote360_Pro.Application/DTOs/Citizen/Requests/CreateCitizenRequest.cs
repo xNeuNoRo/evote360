@@ -7,6 +7,7 @@ namespace eVote360_Pro.Application.DTOs.Citizen.Requests
         string IdentityDocument,
         string FirstName,
         string LastName,
-        string Email
+        string Email,
+        bool IsActive = true
     );
 }

@@ -1,0 +1,126 @@
+@model eVote360_Pro.Application.ViewModels.AuthViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_LayoutAuth";
+}
+
+<div class="w-[90vw] max-w-5xl mx-auto min-h-[600px] bg-white/80 backdrop-blur-3xl border border-white/50 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row relative z-20">
+    
+    <!-- Lado Izquierdo: Branding / Gráfico (Oculto en Móvil) -->
+    <div class="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-red-800 p-12 flex-col justify-between relative overflow-hidden">
+        
+        <!-- Elementos Decorativos -->
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')]"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/4 -right-24 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
+
+        <div class="relative z-10">
+            <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white font-bold tracking-wider uppercase text-sm mb-12 shadow-xl">
+                <i data-lucide="fingerprint" class="w-5 h-5 text-blue-200"></i>
+                Sistema Electoral
+            </div>
+            
+            <h2 class="text-4xl lg:text-5xl font-black text-white leading-tight mb-6">
+                El Futuro de la <br/> Democracia Digital.
+            </h2>
+            <p class="text-blue-100/80 text-lg font-medium leading-relaxed max-w-sm">
+                Plataforma segura, transparente y auditable para la gestión de elecciones de clase mundial.
+            </p>
+        </div>
+
+        <div class="relative z-10 flex items-center gap-4">
+            <div class="flex -space-x-4">
+                <div class="w-10 h-10 rounded-full border-2 border-blue-700 bg-gray-200 flex items-center justify-center overflow-hidden"><img src="https://ui-avatars.com/api/?name=User+A&background=random" class="w-full h-full object-cover"/></div>
+                <div class="w-10 h-10 rounded-full border-2 border-blue-700 bg-gray-300 flex items-center justify-center overflow-hidden"><img src="https://ui-avatars.com/api/?name=User+B&background=random" class="w-full h-full object-cover"/></div>
+                <div class="w-10 h-10 rounded-full border-2 border-blue-700 bg-gray-400 flex items-center justify-center overflow-hidden"><img src="https://ui-avatars.com/api/?name=User+C&background=random" class="w-full h-full object-cover"/></div>
+            </div>
+            <p class="text-xs text-blue-200 font-semibold uppercase tracking-wider">
+                Utilizado por miles de <br/><span class="text-white">ciudadanos.</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Lado Derecho: Formulario de Login -->
+    <div class="w-full md:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-white/50 backdrop-blur-xl relative">
+        
+        <div class="flex items-center justify-between mb-8">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 rounded-xl transition-all shadow-sm hover:shadow-md cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="Volver al portal público">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Portal
+            </a>
+            <div class="md:hidden inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-xl text-blue-600 font-bold text-xs uppercase w-max">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> eVote360 Pro
+            </div>
+        </div>
+
+        <div class="mb-10">
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-2">Bienvenido de vuelta</h1>
+            <p class="text-gray-500 font-medium text-sm">Por favor, ingresa tus credenciales para acceder al panel de control.</p>
+        </div>
+
+        <form asp-controller="Auth" asp-action="Index" method="post" class="space-y-6">
+            
+            <!-- Campo: Usuario -->
+            <div class="group/input">
+                <label asp-for="Username" class="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 transition-colors group-focus-within/input:text-blue-600">Nombre de Usuario</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 transition-colors group-focus-within/input:text-blue-600">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                    <input asp-for="Username" type="text" placeholder="Ej. admin" 
+                           class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-900 placeholder-gray-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none hover:border-gray-300" autocomplete="username" />
+                </div>
+                <span asp-validation-for="Username" class="text-xs font-bold text-red-500 mt-2 block"></span>
+            </div>
+
+            <!-- Campo: Contraseña -->
+            <div class="group/input">
+                <label asp-for="Password" class="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 transition-colors group-focus-within/input:text-blue-600">Contraseña</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 transition-colors group-focus-within/input:text-blue-600">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                    </div>
+                    <input asp-for="Password" type="password" placeholder="••••••••" 
+                           class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-900 placeholder-gray-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none hover:border-gray-300" autocomplete="current-password" />
+                </div>
+                <span asp-validation-for="Password" class="text-xs font-bold text-red-500 mt-2 block"></span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+                <label class="flex items-center group/checkbox cursor-pointer select-none">
+                    <div class="relative flex items-center justify-center w-5 h-5 bg-gray-100 border border-gray-200 rounded-md transition-colors group-hover/checkbox:border-blue-400">
+                        <input asp-for="RememberMe" type="checkbox" class="peer absolute w-full h-full opacity-0 cursor-pointer">
+                        <i data-lucide="check" class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity z-10 pointer-events-none"></i>
+                        <div class="absolute inset-0 bg-blue-600 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></div>
+                    </div>
+                    <span class="ml-3 block text-sm font-medium text-gray-600 group-hover/checkbox:text-gray-900 transition-colors">
+                        Mantener sesión iniciada
+                    </span>
+                </label>
+
+                <a href="#" class="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">
+                    ¿Olvidaste tu clave?
+                </a>
+            </div>
+
+            <div class="pt-6 mt-4 border-t border-gray-100">
+                <button type="submit" 
+                        class="relative w-full group/btn overflow-hidden flex justify-center py-4 px-4 border border-transparent rounded-2xl text-sm font-black text-white bg-gray-900 hover:bg-gray-800 shadow-[0_4px_14px_0_rgb(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-[0.98]">
+                    
+                    <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full duration-1000 transition-transform"></div>
+                    
+                    <span class="flex items-center gap-2">
+                        Ingresar al Sistema <i data-lucide="arrow-right" class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform"></i>
+                    </span>
+                </button>
+            </div>
+        </form>
+        
+        <p class="mt-8 text-center text-xs font-medium text-gray-400">
+            &copy; 2026 eVote360 Pro. Todos los derechos reservados.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

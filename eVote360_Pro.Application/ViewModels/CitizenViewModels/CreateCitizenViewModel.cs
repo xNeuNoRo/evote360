@@ -23,5 +23,8 @@ namespace eVote360_Pro.Application.ViewModels.CitizenViewModels
         [MaxLength(150, ErrorMessage = "El correo electrónico no puede exceder los 150 caracteres.")]
         [Display(Name = "Correo Electrónico")]
         public string Email { get; set; } = null!;
+
+        [Display(Name = "Estado (Activo/Inactivo)")]
+        public bool IsActive { get; set; } = true;
     }
 }

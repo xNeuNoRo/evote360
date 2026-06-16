@@ -116,7 +116,7 @@ namespace eVote360_Pro.Domain.Entities
             if (missingList != null && missingList.Any())
             {
                 throw new DomainException(
-                    "Existen partidos políticos con candidatos incompletos.",
+                    $"Existen partidos políticos con la boleta incompleta: {string.Join(", ", missingList)}. Recuerda que cada partido activo debe cubrir todos los puestos activos.",
                     "Election.IncompleteConfiguration",
                     missingList
                 );

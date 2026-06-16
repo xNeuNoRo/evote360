@@ -23,5 +23,9 @@ namespace eVote360_Pro.Application.ViewModels.CandidateViewModels
 
         [Display(Name = "Estado Activo")]
         public bool IsActive { get; set; }
+
+        public string? CurrentPhotoPath { get; set; }
+        
+        public bool HasParticipated { get; set; }
     }
 }

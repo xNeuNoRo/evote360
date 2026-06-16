@@ -9,6 +9,7 @@ namespace eVote360_Pro.Application.DTOs.User.Requests
         string Email,
         string Username,
         string Password,
-        int RoleId
+        int RoleId,
+        bool IsActive = true
     );
 }

@@ -65,14 +65,14 @@ namespace eVote360_Pro.Application.Services
                 if (await _assignmentRepository.IsUserAlreadyLeaderAsync(request.UserId))
                     throw new ValidationBusinessException(
                         nameof(request.UserId),
-                        "Usuario ya es dirigente.",
+                        "Este usuario ya es dirigente.",
                         "Assignment.UserAlreadyHasParty"
                     );
 
                 if (await _assignmentRepository.HasPartyAlreadyLeaderAsync(request.PartyId))
                     throw new ValidationBusinessException(
                         nameof(request.PartyId),
-                        "Partido ya tiene dirigente.",
+                        "Este partido ya tiene dirigente.",
                         "Assignment.PartyAlreadyHasLeader"
                     );
 
@@ -80,7 +80,7 @@ namespace eVote360_Pro.Application.Services
                     await _partyRepository.GetByIdAsync(request.PartyId)
                     ?? throw new ValidationBusinessException(
                         nameof(request.PartyId),
-                        "Partido no encontrado.",
+                        "Este partido no encontrado.",
                         "PoliticalParty.NotFound"
                     );
 

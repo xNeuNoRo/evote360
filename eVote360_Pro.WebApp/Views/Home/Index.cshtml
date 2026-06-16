@@ -1,8 +1,37 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Portal de Votación";
+    Layout = "_LayoutAuth";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="w-[90vw] max-w-2xl mx-auto mt-10 md:mt-20">
+    <div class="text-center mb-10 relative z-20">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-xl shadow-blue-200 mb-6 border-4 border-blue-50 transform hover:scale-110 transition-transform duration-300">
+            <i data-lucide="fingerprint" class="w-10 h-10 text-blue-600"></i>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-4">
+            Ejerce tu Derecho.
+        </h1>
+        <p class="text-gray-500 font-medium text-lg max-w-lg mx-auto">
+            Bienvenido al portal público de votación. Ingresa tu número de cédula para validar tu identidad e iniciar el proceso.
+        </p>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2rem] p-8 sm:p-12 relative z-20">
+        
+        <div class="space-y-6 text-center">
+            <p class="text-gray-500 font-medium">El proceso de autenticación biométrica está listo. Haz clic en el botón de abajo para comenzar.</p>
+            <div class="pt-4 max-w-xs mx-auto">
+                <a href="/Voting"
+                   class="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl text-base font-black text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+                    Entrar a la Cabina
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-12 text-center relative z-20 flex flex-col items-center gap-4">
+        <a asp-controller="Auth" asp-action="Index" class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors px-4 py-2 rounded-xl hover:bg-white/50">
+            <i data-lucide="lock" class="w-4 h-4"></i> Acceso Administrativo
+        </a>
+    </div>
 </div>

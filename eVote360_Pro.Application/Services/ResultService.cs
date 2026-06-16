@@ -60,15 +60,21 @@ namespace eVote360_Pro.Application.Services
             var positions = await _positionRepository.GetAllAsync(
                 new QueryOptions<ElectivePosition> { IsTracking = false }
             );
+
             var positionResults = new List<PositionResultResponse>();
 
             foreach (var position in positions)
             {
-                var distribution = await _voteRepository.GetVotesDistributionAsync(
+                var totalVotesForPosition = await _voteRepository.GetTotalVotesByPositionAsync(
                     electionId,
                     position.Id
                 );
-                var totalVotesForPosition = await _voteRepository.GetTotalVotesByPositionAsync(
+
+                // Si no hay votos computados para este puesto en esta elección, no lo mostramos en el reporte
+                if (totalVotesForPosition == 0)
+                    continue;
+
+                var distribution = await _voteRepository.GetVotesDistributionAsync(
                     electionId,
                     position.Id
                 );
@@ -94,12 +100,14 @@ namespace eVote360_Pro.Application.Services
                     }
 
                     string partyName = string.Empty;
+                    string partyAcronym = string.Empty;
                     if (
                         item.PartyId.HasValue
                         && partiesDict.TryGetValue(item.PartyId.Value, out var party)
                     )
                     {
                         partyName = party.Name;
+                        partyAcronym = party.Acronym;
                     }
 
                     candidateResults.Add(
@@ -108,6 +116,7 @@ namespace eVote360_Pro.Application.Services
                             candidateName,
                             item.PartyId,
                             partyName,
+                            partyAcronym,
                             photoUrl,
                             item.VoteCount,
                             Math.Round(percentage, 2)

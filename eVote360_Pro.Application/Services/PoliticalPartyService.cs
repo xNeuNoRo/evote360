@@ -95,7 +95,8 @@ namespace eVote360_Pro.Application.Services
                     request.Name,
                     request.Acronym,
                     logoPath,
-                    request.Description
+                    request.Description,
+                    request.IsActive
                 );
 
                 await _partyRepository.AddAsync(party);

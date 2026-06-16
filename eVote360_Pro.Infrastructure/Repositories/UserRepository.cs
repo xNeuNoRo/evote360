@@ -20,7 +20,8 @@ namespace eVote360_Pro.Infrastructure.Repositories
             // Cargamos el usuario con su Rol y Asignación de Partido en una sola consulta
             return await _dbSet
                 .Include(u => u.Role)
-                .Include(u => u.LeaderAssignment)
+                .Include(u => u.LeaderAssignment!)
+                    .ThenInclude(la => la.Party)
                 .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower().Trim());
         }
 

@@ -99,11 +99,17 @@ namespace eVote360_Pro.Application.Services
 
                 var candidate =
                     await _candidateRepository.GetByIdAsync(request.CandidateId)
-                    ?? throw new BusinessException("No encontrado.", "Candidate.NotFound");
-
+                    ?? throw new BusinessException(
+                        "Candidato no encontrado.",
+                        "Candidate.NotFound"
+                    );
+                    
                 var position =
                     await _positionRepository.GetByIdAsync(request.PositionId)
-                    ?? throw new BusinessException("No encontrado.", "ElectivePosition.NotFound");
+                    ?? throw new BusinessException(
+                        "Puesto no encontrado.",
+                        "ElectivePosition.NotFound"
+                    );
 
                 if (request.IsAlly)
                 {

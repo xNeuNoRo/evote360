@@ -1,0 +1,174 @@
+@model IEnumerable<eVote360_Pro.Application.DTOs.Citizen.Responses.CitizenResponse>
+@using eVote360_Pro.Application.Interfaces.Services
+@inject IElectionService ElectionService
+@{
+    ViewData["Title"] = "Padrón Electoral";
+    bool isElectionActive = (await ElectionService.GetActiveElectionAsync()) != null;
+    ViewData["Breadcrumbs"] = new List<(string, string?, string?)>
+    {
+        ("Catálogos", "Index", "Dashboard"),
+        ("Padrón Electoral (Ciudadanos)", null, null)
+    };
+}
+
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+            Padrón Electoral
+        </h1>
+        <p class="text-sm text-gray-500 mt-1 font-medium">Gestiona los ciudadanos habilitados para votar.</p>
+    </div>
+    @if (!isElectionActive)
+    {
+        <a asp-action="Create" style="view-transition-name: card-citizen;" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95">
+        <i data-lucide="user-plus" class="w-4 h-4"></i>
+        Registrar Ciudadano
+    </a>
+    }
+    else
+    {
+        <button disabled class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white text-sm font-bold rounded-xl cursor-not-allowed opacity-70">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Registrar Ciudadano (Bloqueado)
+        </button>
+    }
+</div>
+
+<!-- Search Input for JS filtering (Client Side) -->
+<div class="mb-6 relative">
+    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+    </div>
+    <input type="text" id="citizenSearch" placeholder="Buscar por Cédula, Nombre o Apellido..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-medium text-gray-900 shadow-sm" />
+</div>
+
+
+@if (isElectionActive)
+{
+    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl">
+        <div class="flex items-start">
+            <div class="flex-shrink-0 mt-0.5">
+                <i data-lucide="alert-triangle" class="h-5 w-5 text-amber-500"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-bold text-amber-800">Mantenimiento Deshabilitado</h3>
+                <p class="text-sm text-amber-700 mt-1">
+                    Las opciones de creación y edición están deshabilitadas ya que hay una elección en proceso.
+                </p>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left" id="citizensTable">
+            <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100 font-black tracking-wider">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Cédula</th>
+                    <th scope="col" class="px-6 py-4">Ciudadano</th>
+                    <th scope="col" class="px-6 py-4">Correo Electrónico</th>
+                    <th scope="col" class="px-6 py-4 text-center">Estado</th>
+                    <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @if (!Model.Any())
+                {
+                    <tr id="emptyRow">
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                                <i data-lucide="users" class="w-8 h-8 text-gray-300"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-900 mb-1">Padrón Vacío</h3>
+                            <p class="text-xs text-gray-500">No hay ciudadanos registrados actualmente en el sistema.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-blue-50/30 transition-colors group citizen-row">
+                            <td class="px-6 py-4 font-black text-gray-900 tracking-wider">
+                                @item.IdentityDocument
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900">@item.FirstName @item.LastName</div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500">
+                                @item.Email
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if (item.IsActive)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-600 uppercase tracking-wider border border-emerald-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-600 uppercase tracking-wider border border-red-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                        Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                @if (!isElectionActive)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" style="view-transition-name: card-citizen-@item.Id;" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="Editar">
+                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                    </a>
+                                    <form asp-action="ToggleStatus" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="activate" value="@(item.IsActive ? "false" : "true")" />
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-@(item.IsActive ? "red" : "emerald")-600 hover:bg-@(item.IsActive ? "red" : "emerald")-50 rounded-lg transition-all cursor-pointer transform hover:-translate-y-0.5 active:scale-95" title="@(item.IsActive ? "Desactivar" : "Activar")">
+                                            <i data-lucide="@(item.IsActive ? "power-off" : "power")" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button disabled class="p-2 text-gray-300 cursor-not-allowed" title="Acción deshabilitada por elección activa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('citizenSearch');
+            const rows = document.querySelectorAll('.citizen-row');
+
+            if(searchInput) {
+                searchInput.addEventListener('input', function (e) {
+                    const term = e.target.value.toLowerCase();
+                    let visibleCount = 0;
+
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(term)) {
+                            row.style.display = '';
+                            visibleCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+}

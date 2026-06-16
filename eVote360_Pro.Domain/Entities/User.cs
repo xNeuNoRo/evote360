@@ -32,7 +32,8 @@ namespace eVote360_Pro.Domain.Entities
             string email,
             string username,
             string passwordHash,
-            int roleId
+            int roleId,
+            bool isActive = true
         )
         {
             ValidateBasicInfo(firstName, lastName, email, username);
@@ -52,7 +53,7 @@ namespace eVote360_Pro.Domain.Entities
                 Username = username.Trim().ToLowerInvariant(),
                 PasswordHash = passwordHash,
                 RoleId = roleId,
-                IsActive = true,
+                IsActive = isActive,
             };
         }
 

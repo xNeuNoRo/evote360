@@ -5,11 +5,15 @@ namespace eVote360_Pro.Application.DTOs.Candidate.Responses
     /// </summary>
     public record CandidateResponse(
         int Id,
+        string FirstName,
+        string LastName,
         string FullName,
-        string PhotoUrl,
+        string PhotoPath,
         int OriginalPartyId,
         string OriginalPartyName,
+        string OriginalPartyAcronym,
+        string OriginalPartyLogoPath,
         bool IsActive,
-        bool IsImmutable
+        int VotesCount
     );
 }

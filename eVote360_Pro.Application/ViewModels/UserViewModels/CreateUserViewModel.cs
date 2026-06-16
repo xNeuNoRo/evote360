@@ -35,5 +35,8 @@ namespace eVote360_Pro.Application.ViewModels.UserViewModels
         [Required(ErrorMessage = "El rol es requerido.")]
         [Display(Name = "Rol de Usuario")]
         public int RoleId { get; set; }
+
+        [Display(Name = "Estado (Activo/Inactivo)")]
+        public bool IsActive { get; set; } = true;
     }
 }

@@ -1,3 +1,4 @@
+using eVote360_Pro.Application.DTOs.Dashboard.Responses;
 using eVote360_Pro.Application.DTOs.Voting.Responses;
 
 namespace eVote360_Pro.Application.Interfaces.Services
@@ -13,15 +14,20 @@ namespace eVote360_Pro.Application.Interfaces.Services
         Task<DashboardStatisticsResponse> GetGeneralStatisticsAsync();
 
         /// <summary>
-        /// Obtiene el reporte de resultados para el año electoral seleccionado en el Home del Admin.
+        /// Obtiene el listado de elecciones para el año electoral seleccionado en el Home del Admin.
         /// (Solo para elecciones finalizadas).
         /// </summary>
-        Task<ResultReportResponse?> GetAdminDashboardAsync(int electoralYear);
+        Task<List<ElectionSummaryResponse>> GetAdminDashboardAsync(int electoralYear);
 
         /// <summary>
         /// Obtiene un resumen del estado de la elección activa para el Home del Dirigente.
         /// </summary>
         Task<ResultReportResponse?> GetLeaderDashboardAsync();
+
+        /// <summary>
+        /// Obtiene las estadísticas para el dashboard del Dirigente (Candidatos, Alianzas, etc.).
+        /// </summary>
+        Task<LeaderDashboardStatisticsResponse> GetLeaderStatisticsAsync();
     }
 
     public record DashboardStatisticsResponse(
@@ -29,6 +35,24 @@ namespace eVote360_Pro.Application.Interfaces.Services
         string? ActiveElectionName,
         int VoterParticipationCount,
         int TotalCitizens,
-        int TotalParties
+        int TotalParties,
+        List<RecentCitizenDto> RecentCitizens,
+        List<RecentPartyDto> RecentParties
     );
+
+    public record RecentCitizenDto(string FullName, string IdentityDocument, string CreatedAt);
+    public record RecentPartyDto(string Name, string Acronym, string LogoPath);
+
+    public record LeaderDashboardStatisticsResponse(
+        int ActiveCandidates,
+        int InactiveCandidates,
+        int ApprovedAlliances,
+        int PendingAllianceRequestsReceived,
+        int AssignedCandidates,
+        List<RecentCandidateDto> RecentCandidates,
+        List<AlliedPartyDto> AlliedParties
+    );
+
+    public record RecentCandidateDto(string FullName, string PositionName, string PhotoPath);
+    public record AlliedPartyDto(string Name, string Acronym, string LogoPath);
 }

@@ -13,6 +13,7 @@ using eVote360_Pro.Domain.Interfaces.Security;
 using eVote360_Pro.Domain.ValueObjects;
 using eVote360_Pro.Shared.Interfaces.Messaging;
 using eVote360_Pro.Shared.Interfaces.OCR;
+using Microsoft.Extensions.Logging;
 using eVote360_Pro.Shared.Interfaces.Storage;
 
 namespace eVote360_Pro.Application.Services
@@ -35,6 +36,7 @@ namespace eVote360_Pro.Application.Services
         private readonly IVerificationCodeGenerator _codeGenerator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly ILogger<VotingService> _logger;
 
         public VotingService(
             IElectionRepository electionRepository,
@@ -49,7 +51,8 @@ namespace eVote360_Pro.Application.Services
             IFileService fileService,
             IVerificationCodeGenerator codeGenerator,
             IUnitOfWork unitOfWork,
-            IDateTimeProvider dateTimeProvider
+            IDateTimeProvider dateTimeProvider,
+            ILogger<VotingService> logger
         )
         {
             _electionRepository = electionRepository;
@@ -65,6 +68,40 @@ namespace eVote360_Pro.Application.Services
             _codeGenerator = codeGenerator;
             _unitOfWork = unitOfWork;
             _dateTimeProvider = dateTimeProvider;
+            _logger = logger;
+        }
+
+        public async Task ValidateCitizenCanVoteAsync(string document)
+        {
+            var election =
+                await _electionRepository.GetActiveElectionAsync()
+                ?? throw new BusinessException(
+                    "No hay ningún proceso electoral en estos momentos.",
+                    "Voting.NoActiveElection"
+                );
+
+            var identityDocument = IdentityDocument.Create(document);
+
+            var citizen =
+                await _citizenRepository.GetByIdentityDocumentAsync(identityDocument.Value)
+                ?? throw new BusinessException(
+                    "Este ciudadano no se encuentra registrado en el padrón electoral.",
+                    "Voting.CitizenNotFound"
+                );
+
+            if (!citizen.IsActive)
+                throw new BusinessException(
+                    "Este ciudadano se encuentra inactivo y no tiene derecho al voto.",
+                    "Voting.CitizenInactive"
+                );
+
+            if (await _voterParticipationRepository.HasAlreadyVotedAsync(citizen.Id, election.Id))
+            {
+                throw new BusinessException(
+                    "Ya ha ejercido su derecho al voto.",
+                    "Voting.AlreadyVoted"
+                );
+            }
         }
 
         public async Task<bool> ValidateAndSendOtpAsync(ValidateElectorRequest request)
@@ -73,7 +110,7 @@ namespace eVote360_Pro.Application.Services
             var election =
                 await _electionRepository.GetActiveElectionAsync()
                 ?? throw new BusinessException(
-                    "No existe una elección activa.",
+                    "No hay ningún proceso electoral en estos momentos.",
                     "Voting.NoActiveElection"
                 );
 
@@ -85,14 +122,14 @@ namespace eVote360_Pro.Application.Services
                 await _citizenRepository.GetByIdentityDocumentAsync(identityDocument.Value)
                 ?? throw new ValidationBusinessException(
                     nameof(request.IdentityDocument),
-                    "Ciudadano no encontrado.",
+                    "Este ciudadano no se encuentra registrado en el padrón electoral.",
                     "Voting.CitizenNotFound"
                 );
 
             // Si el ciudadano está inactivo, lo bloqueamos
             if (!citizen.IsActive)
                 throw new BusinessException(
-                    "El ciudadano se encuentra inactivo.",
+                    "Este ciudadano se encuentra inactivo y no tiene derecho al voto.",
                     "Voting.CitizenInactive"
                 );
 
@@ -100,7 +137,7 @@ namespace eVote360_Pro.Application.Services
             if (await _voterParticipationRepository.HasAlreadyVotedAsync(citizen.Id, election.Id))
             {
                 throw new BusinessException(
-                    "Este ciudadano ya emitió su voto en la elección activa.",
+                    "Ya ha ejercido su derecho al voto.",
                     "Voting.AlreadyVoted"
                 );
             }
@@ -120,7 +157,7 @@ namespace eVote360_Pro.Application.Services
             if (!ocrResult.IsSuccess || !ocrResult.IsDocumentValid)
                 throw new ValidationBusinessException(
                     nameof(request.IdCardImage),
-                    "No fue posible validar el documento en la imagen.",
+                    ocrResult.ErrorMessage ?? "No fue posible validar el documento en la imagen.",
                     "Voting.OcrInvalid"
                 );
 
@@ -135,7 +172,7 @@ namespace eVote360_Pro.Application.Services
             {
                 throw new ValidationBusinessException(
                     nameof(request.IdCardImage),
-                    "El número extraído no coincide con el ingresado.",
+                    "Los datos extraídos de la foto no coinciden con los datos previamente ingresados por el elector.",
                     "Voting.OcrMismatch"
                 );
             }
@@ -246,6 +283,7 @@ namespace eVote360_Pro.Application.Services
 
                     return p.ToBallotPosition(candidatesForPosition);
                 })
+                .Where(p => p.Options.Any())
                 .ToList();
 
             return election.ToVoterBallot(ballotPositions);
@@ -273,7 +311,7 @@ namespace eVote360_Pro.Application.Services
                 )
                 {
                     throw new BusinessException(
-                        "Doble intento de voto bloqueado.",
+                        "Ya ha ejercido su derecho al voto.",
                         "Voting.AlreadyVoted"
                     );
                 }
@@ -319,19 +357,78 @@ namespace eVote360_Pro.Application.Services
 
                 await _unitOfWork.CommitAsync();
 
+                var selectionModels = new List<VoteSelectionModel>();
+                foreach (var selection in request.Selections)
+                {
+                    var position = await _positionRepository.GetByIdAsync(selection.PositionId);
+                    if (position == null) continue;
+
+                    if (selection.CandidateId.HasValue && selection.PartyId.HasValue)
+                    {
+                        var assignment = await _assignmentRepository.GetFirstOrDefaultAsync(
+                            new QueryOptions<CandidatePostAssignment>
+                            {
+                                Filter = a => a.PositionId == selection.PositionId 
+                                           && a.CandidateId == selection.CandidateId 
+                                           && a.PartyId == selection.PartyId,
+                                Includes = [a => a.Candidate, a => a.Party],
+                                IsTracking = false
+                            }
+                        );
+
+                        if (assignment != null)
+                        {
+                            selectionModels.Add(new VoteSelectionModel(
+                                position.Name,
+                                $"{assignment.Candidate.FirstName} {assignment.Candidate.LastName}",
+                                assignment.Party.Name
+                            ));
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Assignment not found for PositionId={PositionId}, CandidateId={CandidateId}, PartyId={PartyId}",
+                                selection.PositionId, selection.CandidateId, selection.PartyId
+                            );
+                            selectionModels.Add(new VoteSelectionModel(
+                                position.Name,
+                                "[Candidato no disponible]",
+                                "[Partido no disponible]"
+                            ));
+                        }
+                    }
+                    else
+                    {
+                        selectionModels.Add(new VoteSelectionModel(
+                            position.Name,
+                            "Ninguno",
+                            "No aplica"
+                        ));
+                    }
+                }
+
                 var confirmationModel = new VoteConfirmationModel(
                     $"{citizen.FirstName} {citizen.LastName}",
                     election.Name,
-                    participation.Id.ToString().ToUpper().Substring(0, 8),
-                    _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm")
+                    participation.Id.ToString("D8"),
+                    _dateTimeProvider.UtcNow.ToString("dd/MM/yyyy HH:mm"),
+                    selectionModels
                 );
 
-                await _emailService.SendEmailAsync(
+                var emailSent = await _emailService.SendEmailAsync(
                     citizen.Email,
                     $"Comprobante de Votación - {election.Name}",
                     "VoteConfirmation",
                     confirmationModel
                 );
+
+                if (!emailSent)
+                {
+                    _logger.LogWarning(
+                        "Vote confirmation email failed to send to {Email} for Election={ElectionId}, Citizen={CitizenId}. Vote was already committed.",
+                        citizen.Email, request.ElectionId, request.CitizenId
+                    );
+                }
             }
             catch
             {

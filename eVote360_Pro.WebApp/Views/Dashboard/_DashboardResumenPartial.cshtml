@@ -1,0 +1,74 @@
+@{
+    var reportData = ViewBag.ReportData as List<eVote360_Pro.Application.DTOs.Dashboard.Responses.ElectionSummaryResponse>;
+    int selectedYear = ViewBag.SelectedYear ?? DateTime.Now.Year;
+    int currentYear = DateTime.Now.Year;
+    bool hasActive = !string.IsNullOrEmpty(Model?.ActiveElectionName);
+}
+
+<div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm h-full flex flex-col">
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-black text-gray-900 tracking-tight">Resumen por Año</h2>
+            <p class="text-sm font-medium text-gray-500">Historial de elecciones finalizadas.</p>
+        </div>
+        
+        <form method="get" asp-action="Index" class="flex items-center gap-2">
+            <select id="year" name="year" class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none flex-1 min-w-[100px]">
+                @for (int y = currentYear; y >= 2020; y--)
+                {
+                    if (y == selectedYear)
+                    {
+                        <option value="@y" selected>@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
+            </select>
+            <button type="submit" class="px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors shadow-sm text-sm font-bold whitespace-nowrap">
+                Filtrar
+            </button>
+        </form>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto pr-1 max-h-[400px] custom-scrollbar">
+        @if (reportData == null || !reportData.Any())
+        {
+            <div class="text-center py-10">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-50 mb-3">
+                    <i data-lucide="calendar-x" class="w-6 h-6 text-gray-300"></i>
+                </div>
+                <h3 class="text-sm font-bold text-gray-900 mb-1">No hay datos</h3>
+                <p class="text-xs text-gray-500">Sin elecciones en @selectedYear.</p>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 @(!hasActive ? "md:grid-cols-2 lg:grid-cols-3" : "") gap-4">
+                @foreach (var election in reportData)
+                {
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 group hover:border-blue-200 transition-colors">
+                        <h3 class="font-black text-gray-900 text-sm mb-1 line-clamp-1" title="@election.Name">@election.Name</h3>
+                        <p class="text-xs text-gray-500 font-medium mb-3">@election.RealizationDate.ToString("dd/MM/yyyy")</p>
+                        
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-white p-2 rounded-xl text-center shadow-sm border border-gray-100">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Partidos</div>
+                                <div class="text-sm font-black text-blue-600">@election.ParticipatingPartiesCount</div>
+                            </div>
+                            <div class="bg-white p-2 rounded-xl text-center shadow-sm border border-gray-100">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Candidatos</div>
+                                <div class="text-sm font-black text-purple-600">@election.RealCandidatesCount</div>
+                            </div>
+                            <div class="bg-white p-2 rounded-xl text-center shadow-sm border border-gray-100">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Votantes</div>
+                                <div class="text-sm font-black text-emerald-600">@election.VoterParticipationCount.ToString("N0")</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

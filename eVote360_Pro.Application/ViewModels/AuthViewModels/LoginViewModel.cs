@@ -12,5 +12,7 @@ namespace eVote360_Pro.Application.ViewModels.AuthViewModels
         [DataType(DataType.Password)]
         [Display(Name = "Contraseña")]
         public string Password { get; set; } = null!;
+
+        public bool RememberMe { get; set; }
     }
 }

@@ -1,0 +1,508 @@
+@using eVote360_Pro.Application.DTOs.Voting.Responses
+@model VoterBallotResponse
+@{
+    Layout = "_VoterLayout";
+    ViewData["Title"] = "Cabina de Votación";
+    
+    var ballotJson = System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+}
+
+<style>
+    /* Premium Ballot Custom Styles */
+    .ballot-container {
+        background-color: #fdfdfd;
+        background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    
+    .candidate-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+    }
+    
+    .candidate-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: #3b82f6;
+    }
+    
+    .candidate-card.selected {
+        border-color: #10b981;
+        background-color: #f0fdf4;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+        transform: scale(1.02);
+    }
+    
+    .stamp-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(3) rotate(-20deg);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .candidate-card.selected .stamp-overlay {
+        transform: translate(-50%, -50%) scale(1) rotate(-10deg);
+        opacity: 0.95;
+    }
+
+    .candidate-card.selected .grayscale-hover {
+        filter: grayscale(0%);
+    }
+
+    .grayscale-hover {
+        filter: grayscale(20%);
+        transition: filter 0.3s;
+    }
+    
+    .candidate-card:hover .grayscale-hover {
+        filter: grayscale(0%);
+    }
+
+    /* View Transitions */
+    ::view-transition-old(ballot-content) {
+        animation: fadeOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    ::view-transition-new(ballot-content) {
+        animation: fadeInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    ::view-transition-old(ballot-review) {
+        animation: zoomOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    ::view-transition-new(ballot-review) {
+        animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @@keyframes fadeOutLeft {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-30px); }
+    }
+    @@keyframes fadeInRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @@keyframes zoomOut {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.95); }
+    }
+    @@keyframes zoomIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    #ballotContainer {
+        view-transition-name: ballot-content;
+    }
+    
+    .review-mode #ballotContainer {
+        view-transition-name: ballot-review;
+    }
+
+    .seal-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.03;
+        width: 60%;
+        pointer-events: none;
+        z-index: 0;
+    }
+</style>
+
+<div class="max-w-5xl mx-auto page-entry relative z-10">
+    
+    <!-- Header de la Boleta -->
+    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 mb-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
+        
+        <div class="flex items-center gap-6 relative z-10">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200 transform -rotate-6">
+                <i data-lucide="vote" class="w-8 h-8"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight uppercase">@Model.ElectionName</h1>
+                <p class="text-gray-500 font-bold mt-1 tracking-wider text-sm">BOLETA ELECTORAL OFICIAL</p>
+            </div>
+        </div>
+        
+        <div class="relative z-10 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-center min-w-[160px]">
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Paso Actual</span>
+            <div class="flex items-baseline justify-center gap-1 text-blue-600">
+                <span id="currentStepIndicator" class="text-3xl font-black leading-none">1</span>
+                <span class="text-sm font-bold text-gray-400">/</span>
+                <span id="totalStepsIndicator" class="text-sm font-bold text-gray-400">@Model.Positions.Count</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal (Cambia con View Transitions) -->
+    <div class="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 sm:p-12 relative overflow-hidden ballot-container min-h-[600px]">
+        <!-- Marca de agua -->
+        <i data-lucide="shield-check" class="seal-watermark text-gray-900"></i>
+        
+        <!-- Progreso Visual -->
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gray-100">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-500 ease-out w-0"></div>
+        </div>
+
+        <div id="ballotContainer" class="relative z-10 w-full h-full flex flex-col">
+            <!-- JS inyectará el contenido aquí -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ballotData = @Html.Raw(ballotJson);
+        const positions = ballotData.positions;
+        
+        // Garantizamos que cada puesto tenga la opción explícita de "Voto en Blanco"
+        positions.forEach(p => {
+            if (!p.options.some(o => o.candidateId === null)) {
+                p.options.push({
+                    candidateId: null,
+                    candidateName: 'Voto en Blanco',
+                    partyId: null,
+                    partyName: 'Ninguno',
+                    partyAcronym: 'N/A',
+                    photoUrl: '',
+                    partyLogoUrl: ''
+                });
+            }
+        });
+
+        let currentStep = 0;
+        let selections = {}; // { positionId: { candidateId: x, partyId: y } }
+
+        const container = document.getElementById('ballotContainer');
+        const stepIndicator = document.getElementById('currentStepIndicator');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateProgress(step) {
+            const percentage = ((step) / (positions.length + 1)) * 100;
+            progressBar.style.width = percentage + '%';
+        }
+
+        function renderStepContent(stepIndex) {
+            if (stepIndex >= positions.length) {
+                renderReviewContent();
+                return;
+            }
+
+            const position = positions[stepIndex];
+            stepIndicator.textContent = stepIndex + 1;
+            updateProgress(stepIndex);
+            document.body.classList.remove('review-mode');
+
+            let html = `
+                <div class="flex-1 flex flex-col h-full">
+                    <div class="text-center mb-10">
+                        <span class="inline-block px-4 py-1.5 bg-blue-50 text-blue-700 font-black text-xs uppercase tracking-widest rounded-full mb-4 border border-blue-100">
+                            Nivel de Elección
+                        </span>
+                        <h2 class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight leading-tight uppercase">${position.positionName}</h2>
+                        <p class="text-gray-500 mt-3 font-medium text-lg max-w-2xl mx-auto">${position.description || 'Seleccione un candidato tocando su recuadro.'}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+            `;
+
+            // Candidate Cards
+            position.options.forEach((opt) => {
+                const isNone = opt.candidateId === null;
+                const isSelected = selections[position.positionId]?.candidateId === opt.candidateId;
+                
+                if (isNone) {
+                    html += `
+                        <div onclick="selectCandidate(${position.positionId}, null, null, this)" 
+                             class="candidate-card ${isSelected ? 'selected' : ''} cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-3xl p-6 flex flex-col items-center justify-center text-center h-full relative overflow-hidden group">
+                            
+                            <div class="stamp-overlay flex flex-col items-center justify-center">
+                                <div class="w-32 h-32 border-[6px] border-red-500 rounded-full flex flex-col items-center justify-center text-red-500 bg-white/40 backdrop-blur-sm shadow-2xl">
+                                    <i data-lucide="x" class="w-16 h-16" stroke-width="3"></i>
+                                    <span class="font-black text-xl tracking-widest mt-1">NULO</span>
+                                </div>
+                            </div>
+
+                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600 transition-colors">
+                                <i data-lucide="x" class="w-10 h-10"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-gray-900">Voto en Blanco</h3>
+                            <p class="text-xs font-bold text-gray-400 mt-2 uppercase tracking-wider">No seleccionar a nadie</p>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div onclick="selectCandidate(${position.positionId}, ${opt.candidateId}, ${opt.partyId}, this)" 
+                             class="candidate-card ${isSelected ? 'selected' : ''} cursor-pointer bg-white border-2 border-gray-200 rounded-3xl p-0 relative overflow-hidden flex flex-col h-full">
+                            
+                            <div class="stamp-overlay flex flex-col items-center justify-center">
+                                <div class="w-32 h-32 border-[6px] border-emerald-500 rounded-full flex flex-col items-center justify-center text-emerald-500 bg-white/40 backdrop-blur-sm shadow-2xl">
+                                    <i data-lucide="check" class="w-16 h-16" stroke-width="3"></i>
+                                    <span class="font-black text-lg tracking-widest mt-1">VOTADO</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Cabecera Partido -->
+                            <div class="h-12 bg-gray-50 border-b border-gray-100 flex items-center justify-center gap-2 px-4 relative z-10">
+                                ${opt.partyLogoUrl ? `<img src="${opt.partyLogoUrl}" class="w-6 h-6 rounded-full border border-gray-200 shadow-sm bg-white object-contain p-0.5" />` : ''}
+                                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">${opt.partyAcronym}</span>
+                            </div>
+
+                            <!-- Foto Candidato -->
+                            <div class="relative pt-6 pb-2 px-6 flex-1 flex flex-col items-center justify-center text-center">
+                                <div class="w-28 h-28 mb-4 relative">
+                                    <div class="absolute inset-0 bg-blue-100 rounded-full blur-md opacity-50"></div>
+                                    <img src="${opt.photoUrl}" onerror="this.onerror=null; this.src='/uploads/candidates/default.png';" alt="${opt.candidateName}" 
+                                         class="grayscale-hover relative z-10 w-full h-full rounded-full object-cover border-4 border-white shadow-md bg-gray-100" />
+                                </div>
+                                <h3 class="text-lg font-black text-gray-900 leading-tight mb-2">${opt.candidateName}</h3>
+                                <p class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider mt-auto">${position.positionName}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            html += `
+                    </div>
+                    
+                    <div class="mt-auto pt-10 flex items-center ${stepIndex > 0 ? 'justify-between' : 'justify-end'}">
+                        ${stepIndex > 0 ? `
+                            <button type="button" onclick="goBack()" class="flex items-center gap-2 px-6 py-3 text-sm font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-2xl transition-colors cursor-pointer border border-gray-200">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i> Anterior
+                            </button>
+                        ` : ''}
+                        
+                        <button type="button" onclick="nextStep()" class="flex items-center gap-2 px-8 py-3 text-sm font-black transition-all shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selections[position.positionId] !== undefined ? 'text-white bg-gray-900 hover:bg-blue-600 hover:shadow-blue-200' : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 hover:shadow-gray-200'} rounded-2xl">
+                            ${selections[position.positionId] !== undefined ? 'Siguiente' : 'Omitir Puesto'} <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderReviewContent() {
+            stepIndicator.textContent = "✓";
+            updateProgress(positions.length);
+            document.body.classList.add('review-mode');
+
+            let html = `
+                <div class="flex-1 flex flex-col h-full max-w-3xl mx-auto w-full">
+                    <div class="text-center mb-10 relative">
+                        <div class="absolute top-1/2 left-0 w-full h-px bg-gray-200 -z-10"></div>
+                        <div class="inline-flex w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full items-center justify-center shadow-sm border-8 border-white mb-4">
+                            <i data-lucide="clipboard-check" class="w-10 h-10"></i>
+                        </div>
+                        <h2 class="text-4xl font-black text-gray-900 tracking-tight uppercase bg-white px-6 inline-block">Confirmación de Voto</h2>
+                        <p class="text-gray-500 mt-2 font-medium bg-white px-4 inline-block">Revisa tus selecciones antes de emitir el voto definitivo. Esta acción es irreversible y será cifrada criptográficamente.</p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-[2rem] border border-gray-200 p-2 sm:p-4 mb-8 space-y-2">
+            `;
+
+            positions.forEach(pos => {
+                const sel = selections[pos.positionId];
+                const opt = pos.options.find(o => o.candidateId === sel.candidateId);
+                
+                const isNone = opt.candidateId === null;
+                const nameText = isNone ? "Voto en Blanco" : opt.candidateName;
+                const partyText = isNone ? "Ninguno" : opt.partyName;
+                const photoHtml = isNone 
+                    ? `<div class="w-12 h-12 rounded-xl bg-gray-200 text-gray-400 flex items-center justify-center"><i data-lucide="x" class="w-6 h-6"></i></div>`
+                    : `<img src="${opt.photoUrl}" onerror="this.onerror=null; this.src='/uploads/candidates/default.png';" class="w-12 h-12 rounded-xl object-cover bg-white shadow-sm border border-gray-100" />`;
+
+                html += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white rounded-[1.5rem] shadow-sm border border-gray-100 hover:border-blue-200 transition-colors group">
+                        <div class="flex items-center gap-4 mb-3 sm:mb-0">
+                            ${photoHtml}
+                            <div>
+                                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-0.5">${pos.positionName}</p>
+                                <p class="text-base font-black text-gray-900 leading-tight">${nameText}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 sm:text-right">
+                            <div class="hidden sm:block w-px h-10 bg-gray-100"></div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Partido Político</p>
+                                <div class="flex items-center sm:justify-end gap-2">
+                                    ${!isNone && opt.partyLogoUrl ? `<img src="${opt.partyLogoUrl}" class="w-4 h-4 object-contain rounded-full" />` : ''}
+                                    <p class="text-sm font-black text-gray-700">${partyText}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    
+                    <div class="mt-auto flex flex-col sm:flex-row gap-4">
+                        <button type="button" onclick="resetVoting()" class="flex-1 py-4 text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-2xl transition-all cursor-pointer shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                            Modificar Selecciones
+                        </button>
+                        <button type="button" onclick="submitVote()" class="flex-[2] flex justify-center items-center gap-3 py-4 text-base font-black text-white bg-gradient-to-r from-gray-900 to-gray-800 hover:from-blue-700 hover:to-blue-600 shadow-xl shadow-gray-200 rounded-2xl transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+                            Finalizar votación
+                            <i data-lucide="inbox" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // View Transitions Wrapper
+        function transitionTo(renderFn, arg) {
+            if (!document.startViewTransition) {
+                renderFn(arg);
+                return;
+            }
+            document.startViewTransition(() => {
+                renderFn(arg);
+            });
+        }
+
+        function renderStep(stepIndex) {
+            transitionTo(renderStepContent, stepIndex);
+        }
+
+        window.selectCandidate = function(positionId, candidateId, partyId, element) {
+            // Remove selected class from all cards in this step
+            const cards = container.querySelectorAll('.candidate-card');
+            cards.forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to clicked element for instant feedback
+            element.classList.add('selected');
+
+            selections[positionId] = {
+                positionId: positionId,
+                candidateId: candidateId,
+                partyId: partyId
+            };
+            
+            // Wait for the animation to play before transitioning
+            setTimeout(() => {
+                nextStep();
+            }, 800);
+        }
+
+        window.nextStep = function() {
+            if (selections[positions[currentStep].positionId] === undefined) {
+                selections[positions[currentStep].positionId] = {
+                    positionId: positions[currentStep].positionId,
+                    candidateId: null,
+                    partyId: null
+                };
+            }
+            currentStep++;
+            renderStep(currentStep);
+        }
+
+        window.goBack = function() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        }
+
+        window.resetVoting = function() {
+            Swal.fire({
+                title: '¿Modificar Voto?',
+                text: "Regresarás al inicio para cambiar tus opciones.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, volver',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'px-6 py-3 text-sm font-bold text-white bg-gray-900 rounded-xl hover:bg-gray-800 mx-2 shadow-lg',
+                    cancelButton: 'px-6 py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 mx-2',
+                    popup: 'rounded-[2rem] border border-gray-100 shadow-2xl p-6'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentStep = 0;
+                    // Wait for the SweetAlert closing animation to finish before view transition
+                    setTimeout(() => {
+                        renderStep(0);
+                    }, 350);
+                }
+            });
+        }
+
+        window.submitVote = function() {
+            const payload = {
+                electionId: ballotData.electionId,
+                selections: Object.values(selections).map(s => ({
+                    positionId: s.positionId,
+                    candidateId: s.candidateId,
+                    partyId: s.partyId
+                }))
+            };
+
+            Swal.fire({
+                title: 'Depositando Voto',
+                html: '<div class="text-gray-500 font-medium text-sm mt-2">Cifrando boleta y enviando a la urna electrónica...</div>',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                customClass: { popup: 'rounded-[2rem] p-8' }
+            });
+
+            fetch('/Voting/SubmitVote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Success! Redirect to receipt
+                    window.location.href = data.redirectUrl;
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Voto Rechazado',
+                        text: data.message || 'Ocurrió un error de validación.',
+                        customClass: { popup: 'rounded-[2rem]' },
+                        confirmButtonText: 'Entendido',
+                        buttonsStyling: false,
+                        customClass: { confirmButton: 'px-6 py-3 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700' }
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fallo de Red',
+                    text: 'No se pudo conectar con el servidor electoral.',
+                    customClass: { popup: 'rounded-[2rem]' }
+                });
+            });
+        }
+
+        // Init first step
+        if (positions && positions.length > 0) {
+            renderStep(0);
+        } else {
+            container.innerHTML = '<div class="flex-1 flex items-center justify-center text-center py-20 text-gray-400 font-black text-xl uppercase tracking-widest"><i data-lucide="file-x" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>No hay cargos configurados</div>';
+            lucide.createIcons();
+        }
+    </script>
+}

@@ -78,8 +78,9 @@ namespace eVote360_Pro.Infrastructure
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IOcrService, OcrService>();
 
-            // Configuracion de Email
-            services.AddScoped<IEmailService, FluentEmailService>();
+            // Configuracion de Email (MailKit y RazorLight)
+            services.AddSingleton<IRazorRenderer, RazorRenderer>();
+            services.AddScoped<IEmailService, MailKitEmailService>();
 
             return services;
         }

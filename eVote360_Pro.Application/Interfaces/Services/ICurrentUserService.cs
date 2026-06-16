@@ -22,6 +22,16 @@ namespace eVote360_Pro.Application.Interfaces.Services
         bool IsAuthenticated { get; }
 
         /// <summary>
+        /// Nombre completo del usuario.
+        /// </summary>
+        string? FullName { get; }
+
+        /// <summary>
+        /// Correo electrónico del usuario.
+        /// </summary>
+        string? Email { get; }
+
+        /// <summary>
         /// Nombre del rol principal del usuario.
         /// </summary>
         string? Role { get; }

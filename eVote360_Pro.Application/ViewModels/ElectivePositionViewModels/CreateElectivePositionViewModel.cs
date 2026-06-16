@@ -13,5 +13,8 @@ namespace eVote360_Pro.Application.ViewModels.ElectivePositionViewModels
         [MaxLength(500, ErrorMessage = "La descripción no puede exceder los 500 caracteres.")]
         [Display(Name = "Descripción")]
         public string Description { get; set; } = null!;
+
+        [Display(Name = "Estado (Activo/Inactivo)")]
+        public bool IsActive { get; set; } = true;
     }
 }

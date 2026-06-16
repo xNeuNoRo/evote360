@@ -22,6 +22,7 @@ namespace eVote360_Pro.Application.DTOs.Voting.Responses
         string CandidateName,
         int? PartyId,
         string PartyName,
+        string PartyAcronym,
         string PhotoUrl,
         int VotesCount,
         double Percentage
