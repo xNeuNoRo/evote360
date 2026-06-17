@@ -10,7 +10,6 @@ using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.Domain.Interfaces.Persistence;
 using eVote360_Pro.Domain.Interfaces.Providers;
 using eVote360_Pro.Domain.Interfaces.Repositories;
-using eVote360_Pro.Shared.Interfaces.Messaging;
 using Microsoft.Extensions.Configuration;
 
 namespace eVote360_Pro.Application.Services

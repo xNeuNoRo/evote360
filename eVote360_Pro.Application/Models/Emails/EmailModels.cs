@@ -1,5 +1,3 @@
-using eVote360_Pro.Shared.Interfaces.Messaging;
-
 namespace eVote360_Pro.Application.Models.Emails
 {
     public record OtpVerificationModel(string FullName, string Code) : IEmailModel;

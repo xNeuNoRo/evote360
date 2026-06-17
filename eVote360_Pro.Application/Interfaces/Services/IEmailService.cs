@@ -1,4 +1,6 @@
-namespace eVote360_Pro.Shared.Interfaces.Messaging
+using eVote360_Pro.Application.Models.Emails;
+
+namespace eVote360_Pro.Application.Interfaces.Services
 {
     public interface IEmailService
     {

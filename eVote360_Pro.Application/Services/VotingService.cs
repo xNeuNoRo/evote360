@@ -11,10 +11,7 @@ using eVote360_Pro.Domain.Interfaces.Providers;
 using eVote360_Pro.Domain.Interfaces.Repositories;
 using eVote360_Pro.Domain.Interfaces.Security;
 using eVote360_Pro.Domain.ValueObjects;
-using eVote360_Pro.Shared.Interfaces.Messaging;
-using eVote360_Pro.Shared.Interfaces.OCR;
 using Microsoft.Extensions.Logging;
-using eVote360_Pro.Shared.Interfaces.Storage;
 
 namespace eVote360_Pro.Application.Services
 {

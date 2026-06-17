@@ -10,7 +10,6 @@ using eVote360_Pro.Domain.Interfaces.Persistence;
 using eVote360_Pro.Domain.Interfaces.Repositories;
 using eVote360_Pro.Domain.Interfaces.Security;
 using eVote360_Pro.Domain.ValueObjects;
-using eVote360_Pro.Shared.Interfaces.Messaging;
 using Microsoft.Extensions.Configuration;
 
 namespace eVote360_Pro.Application.Services

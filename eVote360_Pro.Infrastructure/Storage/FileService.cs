@@ -1,4 +1,4 @@
-using eVote360_Pro.Shared.Interfaces.Storage;
+using eVote360_Pro.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

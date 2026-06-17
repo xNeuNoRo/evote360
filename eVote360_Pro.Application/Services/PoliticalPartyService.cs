@@ -7,7 +7,6 @@ using eVote360_Pro.Domain.Entities;
 using eVote360_Pro.Domain.Exceptions;
 using eVote360_Pro.Domain.Interfaces.Persistence;
 using eVote360_Pro.Domain.Interfaces.Repositories;
-using eVote360_Pro.Shared.Interfaces.Storage;
 
 namespace eVote360_Pro.Application.Services
 {

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\eVote360_Pro.Application\eVote360_Pro.Application.csproj" />
+    <ProjectReference Include="..\eVote360_Pro.Shared\eVote360_Pro.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

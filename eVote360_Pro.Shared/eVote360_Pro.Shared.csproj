@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\eVote360_Pro.Domain\eVote360_Pro.Domain.csproj" />
+    <ProjectReference Include="..\eVote360_Pro.Application\eVote360_Pro.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

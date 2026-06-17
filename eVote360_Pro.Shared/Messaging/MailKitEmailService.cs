@@ -1,4 +1,5 @@
-using eVote360_Pro.Shared.Interfaces.Messaging;
+using eVote360_Pro.Application.Interfaces.Services;
+using eVote360_Pro.Application.Models.Emails;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
